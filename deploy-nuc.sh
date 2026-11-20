@@ -35,6 +35,10 @@ echo "⏳ Đang đồng bộ cấu trúc database Prisma..."
 sleep 5
 $COMPOSE_CMD exec -T key-backend npx prisma db push || true
 
+echo "🌱 Đang nạp dữ liệu mẫu (Sản phẩm, Danh mục, Tài khoản Admin)..."
+$COMPOSE_CMD exec -T key-backend npm run seed || true
+$COMPOSE_CMD exec -T key-backend npm run seed:admin || true
+
 echo ""
 echo "========================================================"
 echo "✅ Dịch vụ Web Key Sellers đã sẵn sàng!"
