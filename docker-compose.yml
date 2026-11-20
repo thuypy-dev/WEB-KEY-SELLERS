@@ -49,8 +49,7 @@ services:
     environment:
       - PORT=611
       - DATABASE_URL=mysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
-      - FRONTEND_URL=https://shop.chatapps.online,https://chatapps.online
-      - COOKIE_DOMAIN=.chatapps.online
+      - FRONTEND_URL=http://192.168.1.14:3003,http://localhost:3003
     depends_on:
       key-mysql:
         condition: service_healthy
@@ -63,7 +62,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://api.chatapps.online
+        - VITE_API_URL=http://192.168.1.14:611
     container_name: key_frontend
     restart: always
     ports:
