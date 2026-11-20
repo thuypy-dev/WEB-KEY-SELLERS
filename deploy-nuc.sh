@@ -21,6 +21,12 @@ else
     exit 1
 fi
 
+# Kiểm tra file .env
+if [ ! -f .env ]; then
+    echo "📝 Khởi tạo file .env từ .env.example..."
+    cp .env.example .env
+fi
+
 echo "📦 Đang build và khởi động hệ thống với $COMPOSE_CMD..."
 $COMPOSE_CMD up -d --build --remove-orphans
 
