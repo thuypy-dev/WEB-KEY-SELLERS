@@ -12,7 +12,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_key_data:/var/lib/mysql
+      - mysql_key_data_v2:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -48,6 +48,8 @@ services:
       - "611:611"
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=mysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
     depends_on:
       key-mysql:
         condition: service_healthy
@@ -69,5 +71,5 @@ services:
       - key-backend
 
 volumes:
-  mysql_key_data:
+  mysql_key_data_v2:
   redis_key_data:
