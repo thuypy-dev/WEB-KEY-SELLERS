@@ -40,11 +40,19 @@ class ChatOrchestrator :
         self.best_sellers = "GET_BEST_SELLER"
         self.greeting = 'GREETING'
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel(model_name='gemma-3-27b-it')
-        #self.model = genai.GenerativeModel(model_name='gemini-2.5-flash')
+        self.model = genai.GenerativeModel(model_name='gemma-4-26b-a4b-it')
         
 
     async def handle_request(self, user_question : str, history : list, db : AsyncSession) : 
+        # Fast-path: Phản hồi ngay lập tức cho các câu chào hỏi cơ bản mà không cần chờ LLM (trả lời trong 0.1s)
+        common_greetings = {"hi", "hello", "helo", "hêlo", "alo", "chào", "chào bạn", "chào shop", "hi shop", "hello shop", "chào ad"}
+        if user_question.lower().strip() in common_greetings:
+            return {
+                "intent": self.greeting,
+                "answer": "Xin chào bạn! Mình là Fairy, trợ lý ảo của PDTKEY ✨ Rất vui được gặp bạn! Bạn đang cần tìm kiếm key phần mềm hay tài khoản dịch vụ nào hôm nay?",
+                "product_ids": []
+            }
+
         final_question = user_question
 
         if history and self.rag_service._needs_rewrite(user_question) :
@@ -82,7 +90,7 @@ class ChatOrchestrator :
                         product_info_context = f"- Sản phẩm: {p.name}\n  Các gói: {variants_str}\n  Mô tả: {p.description or 'Không có mô tả'}\n\n"
 
                 prompt_answer = f"""
-                    Bạn là nhân viên tư vấn VTV_KEY.
+                    Bạn là nhân viên tư vấn PDTKEY.
                     Khách hàng hỏi: "{final_question}"
                     
                     Dữ liệu hệ thống tìm thấy:
@@ -92,11 +100,17 @@ class ChatOrchestrator :
                     - Trả lời câu hỏi của khách dựa trên dữ liệu trên.
                     - Nếu khách hỏi giá, hãy báo giá cụ thể các gói.
                     - Giọng điệu thân thiện, mời chào mua hàng.
-                    
+                    - BẮT ĐẦU CÂU TRẢ LỜI CỦA BẠN BẰNG TỪ KHÓA: "Trả lời:"
                     """
                 ai_response = await self.model.generate_content_async(prompt_answer)
                 response['intent'] = self.search_prod
-                response['answer'] = ai_response.text.strip()
+                raw_ans = ai_response.text.strip()
+                if "Trả lời:" in raw_ans:
+                    response['answer'] = raw_ans.split("Trả lời:")[-1].strip()
+                elif "Answer:" in raw_ans:
+                    response['answer'] = raw_ans.split("Answer:")[-1].strip()
+                else:
+                    response['answer'] = raw_ans
                 response['product_ids'] = product_ids
             else : 
                 logger.info('Tìm kiếm từ database thất bại, chuyển qua rag')
@@ -131,9 +145,9 @@ class ChatOrchestrator :
             
 
         else : 
-            prompt = f""" Bạn là một AI cho chatbox vituvu, khi người dùng hỏi những câu không liên quan
+            prompt = f""" Bạn là một AI cho chatbox PDTKEY, khi người dùng hỏi những câu không liên quan
             như chào hỏi, hoặc hỏi kiến thức bên ngoài thì nếu có thể hãy gợi ý về sản phẩm của shop hoặc shop cho hợp
-            lí. Tên shop là "VTV_KEY". Nhớ hãy thật hợp lí chứ không phải bất chấp.
+            lí. Tên shop là "PDTKEY". Nhớ hãy thật hợp lí chứ không phải bất chấp.
              Đây là gợi ý cho bạn : "
              user : "bạn biết Bùi Anh Tuấn không",
              model : "Bùi Anh Tuấn là một ca sĩ nổi tiếng ở Việt Nam, được biết đến với nhiều hit và giọng hát ấm áp.

@@ -5,7 +5,7 @@ import useAuthStore from '../store/useAuthStore';
 import axiosClient from '../store/axiosClient';
 
 const SessionManager = () => {
-  const { isAuthenticated, logout, user } = useAuthStore();
+  const { isAuthenticated, logout, user, checkAuth } = useAuthStore();
   const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(false);
@@ -71,6 +71,8 @@ const SessionManager = () => {
   useEffect(() => {
     if (isAuthenticated) {
       resetTimers();
+      // Đồng bộ thông tin user mới nhất từ backend (role, fullName, balance...)
+      checkAuth?.();
     } else {
       // Nếu chưa đăng nhập thì xóa hết timer
       if (timerRef.current) clearTimeout(timerRef.current);

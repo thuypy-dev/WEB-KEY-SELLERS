@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Eye, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, Users, ChevronLeft, ChevronRight, UserPlus, X, Shield, Mail, Lock, UserCheck, AlertCircle } from 'lucide-react';
 import axiosClient from '../../../store/axiosClient';
 
 // Format tiền
@@ -12,7 +12,7 @@ const ROLES = {
     SUPPORT: { value: 'SUPPORT', label: 'Supporter' },
 };
 
-const UserListPage = () => {
+const StaffListPage = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +21,17 @@ const UserListPage = () => {
     
     // State Modal Chi tiết
     const [selectedUser, setSelectedUser] = useState(null);
+
+    // State Modal Thêm Nhân Viên
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createLoading, setCreateLoading] = useState(false);
+    const [createError, setCreateError] = useState('');
+    const [createForm, setCreateForm] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+        role: 'SUPPORT',
+    });
 
     // Fetch Data
     const fetchUsers = async (page = 1) => {
@@ -65,6 +76,59 @@ const UserListPage = () => {
         }
     };
 
+    // Thêm nhân viên
+    const handleCreateStaff = async (e) => {
+        e.preventDefault();
+        setCreateError('');
+
+        if (!createForm.fullName.trim() || !createForm.email.trim()) {
+            setCreateError('Vui lòng nhập đầy đủ họ tên và email');
+            return;
+        }
+
+        try {
+            setCreateLoading(true);
+            await axiosClient.post('/admin/users', {
+                fullName: createForm.fullName.trim(),
+                email: createForm.email.trim(),
+                password: createForm.password || 'Staff@123456',
+                role: createForm.role,
+            });
+
+            alert(`Tạo nhân viên thành công!\nMật khẩu đăng nhập: ${createForm.password || 'Staff@123456'}`);
+            setShowCreateModal(false);
+            setCreateForm({
+                fullName: '',
+                email: '',
+                password: '',
+                role: 'SUPPORT',
+            });
+            fetchUsers(1);
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Có lỗi xảy ra khi tạo nhân viên';
+            setCreateError(Array.isArray(msg) ? msg.join(', ') : msg);
+        } finally {
+            setCreateLoading(false);
+        }
+    };
+
+    // Đổi vai trò trực tiếp
+    const handleChangeRole = async (userId, currentRole) => {
+        const nextRole = currentRole === 'ADMIN' ? 'SUPPORT' : 'ADMIN';
+        const roleLabel = nextRole === 'ADMIN' ? 'Quản trị viên (ADMIN)' : 'Supporter (SUPPORT)';
+        if (!window.confirm(`Bạn có chắc muốn chuyển vai trò tài khoản này thành ${roleLabel}?`)) {
+            return;
+        }
+
+        try {
+            await axiosClient.patch(`/admin/users/${userId}`, { role: nextRole });
+            alert('Cập nhật vai trò thành công!');
+            fetchUsers(pagination.page);
+        } catch (error) {
+            alert('Lỗi cập nhật vai trò: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPage) {
             fetchUsers(newPage);
@@ -74,22 +138,33 @@ const UserListPage = () => {
     return (
         <div className="space-y-6 pb-20 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Users className="text-vtv-green"/> Quản lý Nhân viên</h1>
-                    <p className="text-gray-400 text-sm mt-1">Tổng: {pagination.total} tài khoản</p>
+                    <h1 className="text-2xl font-bold dark:text-white text-slate-900 flex items-center gap-2">
+                        <Users className="text-vtv-green"/> Quản lý Nhân viên
+                    </h1>
+                    <p className="text-gray-400 text-sm mt-1">Tổng: {pagination.total} tài khoản nhân sự</p>
                 </div>
+                <button
+                    onClick={() => {
+                        setCreateError('');
+                        setShowCreateModal(true);
+                    }}
+                    className="bg-vtv-green text-black font-bold px-4 py-2.5 rounded-xl hover:bg-green-400 transition flex items-center gap-2 shadow-lg shadow-green-500/20 active:scale-95"
+                >
+                    <UserPlus size={18} /> Thêm nhân viên
+                </button>
             </div>
 
             {/* Filters */}
-            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
                 {/* Role Tabs */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     {Object.values(ROLES).map(r => (
                         <button 
                             key={r.value}
                             onClick={() => setActiveRole(r.value)}
-                            className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition ${activeRole === r.value ? 'bg-vtv-green text-slate-950' : 'bg-slate-800 hover:bg-slate-700 text-gray-300'}`}
+                            className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition whitespace-nowrap ${activeRole === r.value ? 'bg-vtv-green text-slate-950 shadow-sm' : 'bg-slate-800 hover:bg-slate-700 text-gray-300'}`}
                         >
                             {r.label}
                         </button>
@@ -103,7 +178,7 @@ const UserListPage = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && fetchUsers(1)}
-                        className="w-full bg-slate-950 border border-slate-700 text-gray-300 text-sm rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-vtv-green"
+                        className="w-full bg-slate-950 border border-slate-700 text-gray-300 text-sm rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-vtv-green transition"
                     />
                 </div>
             </div>
@@ -113,7 +188,7 @@ const UserListPage = () => {
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-slate-950 text-gray-400 text-sm border-b border-slate-800">
-                            <th className="p-4">Khách hàng</th>
+                            <th className="p-4">Nhân sự</th>
                             <th className="p-4">Vai trò</th>
                             <th className="p-4">Số dư ví</th>
                             <th className="p-4 text-center">Đơn hàng</th>
@@ -129,19 +204,23 @@ const UserListPage = () => {
                                 <tr key={user.id} className="hover:bg-slate-800/50 transition">
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white shadow-sm">
                                                 {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                                             </div>
                                             <div>
                                                 <div className="font-bold text-white text-sm">{user.fullName || 'Chưa đặt tên'}</div>
-                                                <div className="text-xs text-gray-500">{user.email}</div>
+                                                <div className="text-xs text-gray-400 font-mono">{user.email}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="p-4">
-                                        <span className={`px-2 py-1 rounded text-[10px] font-bold border 
-                                            ${user.role === 'ADMIN' ? 'bg-red-500/20 text-red-500 border-red-500/50' : 'bg-blue-500/20 text-blue-500 border-blue-500/50'}`}>
-                                            {user.role}
+                                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 ${
+                                            user.role === 'ADMIN' 
+                                                ? 'bg-rose-500/15 text-rose-500 border-rose-500/30' 
+                                                : 'bg-blue-500/15 text-blue-500 border-blue-500/30'
+                                        }`}>
+                                            <Shield size={12} />
+                                            {user.role === 'ADMIN' ? 'Quản trị viên' : 'Supporter'}
                                         </span>
                                     </td>
                                     <td className="p-4 font-mono font-bold text-vtv-green">{formatCurrency(user.balance)}</td>
@@ -149,15 +228,26 @@ const UserListPage = () => {
                                         <span className="bg-slate-800 px-2 py-1 rounded text-xs text-gray-300">{user._count?.orders || 0}</span>
                                     </td>
                                     <td className="p-4 text-xs text-gray-400">{formatDate(user.createdAt)}</td>
-                                    <td className="p-4 text-right">
-                                        <button onClick={() => handleViewDetail(user.id)} className="p-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-lg transition">
-                                            <Eye size={18}/>
+                                    <td className="p-4 text-right space-x-2">
+                                        <button 
+                                            onClick={() => handleChangeRole(user.id, user.role)} 
+                                            className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg text-xs font-semibold transition border border-slate-700"
+                                            title="Đổi vai trò giữa Admin và Support"
+                                        >
+                                            Đổi quyền
+                                        </button>
+                                        <button 
+                                            onClick={() => handleViewDetail(user.id)} 
+                                            className="p-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg transition"
+                                            title="Xem chi tiết"
+                                        >
+                                            <Eye size={16}/>
                                         </button>
                                     </td>
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan="6" className="p-8 text-center text-gray-500">Không tìm thấy user nào.</td></tr>
+                            <tr><td colSpan="6" className="p-8 text-center text-gray-500">Không tìm thấy nhân sự nào.</td></tr>
                         )}
                     </tbody>
                 </table>
@@ -195,11 +285,150 @@ const UserListPage = () => {
                 )}
             </div>
 
+            {/* --- MODAL THÊM NHÂN VIÊN MỚI --- */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
+                        <button 
+                            onClick={() => setShowCreateModal(false)} 
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+                        >
+                            <X size={20}/>
+                        </button>
+
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-xl bg-vtv-green/20 text-vtv-green flex items-center justify-center border border-vtv-green/30">
+                                <UserPlus size={22} />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold dark:text-white text-slate-900">Thêm nhân viên mới</h2>
+                                <p className="text-xs text-gray-400">Cấp tài khoản nhân sự quản trị hệ thống</p>
+                            </div>
+                        </div>
+
+                        {createError && (
+                            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-sm flex items-start gap-2">
+                                <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                                <span>{createError}</span>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleCreateStaff} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
+                                    Họ và tên <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Ví dụ: Nguyễn Văn A"
+                                    value={createForm.fullName}
+                                    onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white text-sm focus:border-vtv-green outline-none transition"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
+                                    Email đăng nhập <span className="text-rose-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3.5 top-3 text-gray-500" size={16} />
+                                    <input
+                                        type="email"
+                                        required
+                                        placeholder="staff@vtvkey.com"
+                                        value={createForm.email}
+                                        onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-10 pr-3 text-white text-sm focus:border-vtv-green outline-none transition"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 flex justify-between">
+                                    <span>Mật khẩu</span>
+                                    <span className="text-gray-500 normal-case font-normal">(Mặc định: Staff@123456)</span>
+                                </label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3.5 top-3 text-gray-500" size={16} />
+                                    <input
+                                        type="text"
+                                        placeholder="Staff@123456"
+                                        value={createForm.password}
+                                        onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-10 pr-3 text-white text-sm focus:border-vtv-green outline-none transition font-mono"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
+                                    Vai trò phân quyền
+                                </label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition ${
+                                        createForm.role === 'SUPPORT' 
+                                            ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' 
+                                            : 'bg-slate-950 border-slate-800 text-gray-400 hover:border-slate-700'
+                                    }`}>
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="SUPPORT"
+                                            checked={createForm.role === 'SUPPORT'}
+                                            onChange={() => setCreateForm({ ...createForm, role: 'SUPPORT' })}
+                                            className="hidden"
+                                        />
+                                        <Shield size={16} />
+                                        <span>Supporter</span>
+                                    </label>
+
+                                    <label className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition ${
+                                        createForm.role === 'ADMIN' 
+                                            ? 'bg-rose-500/10 border-rose-500 text-rose-400 font-bold' 
+                                            : 'bg-slate-950 border-slate-800 text-gray-400 hover:border-slate-700'
+                                    }`}>
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="ADMIN"
+                                            checked={createForm.role === 'ADMIN'}
+                                            onChange={() => setCreateForm({ ...createForm, role: 'ADMIN' })}
+                                            className="hidden"
+                                        />
+                                        <Shield size={16} />
+                                        <span>Quản trị viên</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-slate-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-gray-300 text-sm font-semibold transition"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={createLoading}
+                                    className="px-5 py-2.5 rounded-xl bg-vtv-green hover:bg-green-400 text-black font-bold text-sm transition shadow-lg shadow-green-500/20 disabled:opacity-50"
+                                >
+                                    {createLoading ? 'Đang tạo...' : 'Tạo nhân viên'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* --- MODAL CHI TIẾT USER --- */}
             {selectedUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl p-6 relative">
-                        <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><Users size={24}/></button>
+                        <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"><X size={20}/></button>
                         
                         <div className="flex items-center gap-4 mb-6">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
@@ -222,7 +451,7 @@ const UserListPage = () => {
                                     <div key={order.id} className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex justify-between items-center">
                                         <div>
                                             <div className="font-mono text-white text-sm font-bold">{order.code || `#${order.id}`}</div>
-                                            <div className="text-xs text-gray-500">{formatDate(order.createdAt)} • {order._count.items} món</div>
+                                            <div className="text-xs text-gray-500">{formatDate(order.createdAt)} • {order._count?.items || 0} món</div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-vtv-green font-bold text-sm">{formatCurrency(order.totalAmount)}</div>
@@ -245,4 +474,4 @@ const UserListPage = () => {
     );
 };
 
-export default UserListPage;
+export default StaffListPage;

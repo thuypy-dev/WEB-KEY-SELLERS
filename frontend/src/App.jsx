@@ -68,7 +68,7 @@ function App() {
       {/* SessionManager chạy toàn cục để check token */}
       <SessionManager />
 
-      <div className="min-h-screen bg-gradient-to-b from-slate-800 to-vtv-dark text-gray-200 font-sans flex flex-col">
+      <div className="min-h-screen dark:bg-gradient-to-b dark:from-slate-800 dark:to-vtv-dark bg-slate-50 dark:text-gray-200 text-slate-800 font-sans flex flex-col transition-colors duration-200">
         <Routes>
           {/* --- NHÓM ROUTE PUBLIC (Dùng PublicLayout) --- */}
           <Route element={<PublicLayout />}>

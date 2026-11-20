@@ -2,7 +2,7 @@ import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
 
 // Cấu hình Base URL chung
-const baseURL = 'http://localhost:3000';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:0611';
 
 const axiosClient = axios.create({
   baseURL: baseURL,

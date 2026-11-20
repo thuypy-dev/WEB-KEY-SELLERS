@@ -69,7 +69,7 @@ const PolicyPage = () => {
             <ul className="list-disc pl-5 space-y-2">
               <li>
                 <strong>Sản phẩm áp dụng:</strong> Tất cả các Key/Tài khoản được
-                xuất ra từ hệ thống VTVKey.
+                xuất ra từ hệ thống PDTKey.
               </li>
               <li>
                 <strong>Thời hạn bảo hành:</strong> Tương ứng với tên và mô tả

@@ -188,7 +188,7 @@ const CheckoutPage = () => {
               <p className="text-sm text-gray-600">
                 Nội dung:{' '}
                 <strong className="text-blue-600">
-                  VTVKEY {user?.id?.slice(-5).toUpperCase() || 'CODE'}
+                  PDTKEY {user?.id?.slice(-5).toUpperCase() || 'CODE'}
                 </strong>
               </p>
             </div>

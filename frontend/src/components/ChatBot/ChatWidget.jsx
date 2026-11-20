@@ -22,7 +22,7 @@ const ChatWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   // Text hiển thị khi AI đang trả lời
-  const [loadingText, setLoadingText] = useState('AI đang tìm kiếm...');
+  const [loadingText, setLoadingText] = useState('Đang phản hồi...');
 
   const { isAuthenticated } = useAuthStore();
   const prevAuthRef = useRef(isAuthenticated);
@@ -32,7 +32,7 @@ const ChatWidget = () => {
   const welcomeMessage = {
     id: 'welcome',
     content:
-      'Chào bạn! Tôi là trợ lý ảo AI của VTV Key Sellers. Tôi có thể giúp bạn tìm key bản quyền hoặc giải đáp thắc mắc nào?',
+      'Chào bạn! Tôi là trợ lý ảo AI của PDTKEY. Tôi có thể giúp bạn tìm key bản quyền hoặc giải đáp thắc mắc nào?',
     sender: 'bot',
     timestamp: new Date(),
   };
@@ -120,7 +120,7 @@ const ChatWidget = () => {
 
       setIsLoading(false);
       // Trả lại text mặc định
-      setLoadingText('AI đang tìm kiếm...');
+      setLoadingText('Đang phản hồi...');
     }
   };
 
@@ -156,7 +156,7 @@ const ChatWidget = () => {
     setInputValue('');
 
     // Set text mặc định khi chat
-    setLoadingText('AI đang tìm kiếm...');
+    setLoadingText('Đang phản hồi...');
     setIsLoading(true);
 
     try {
@@ -418,7 +418,7 @@ const ChatWidget = () => {
 
           <div className="bg-vtv-card py-1 text-center border-t border-slate-800">
             <p className="text-[10px] text-gray-500">
-              Powered by VTV AI System
+              Powered by PDT AI System
             </p>
           </div>
         </div>

@@ -5,7 +5,7 @@ import AdminHeader from '../components/AdminHeader';
 
 const AdminLayout = () => {
   return (
-    <div className="flex min-h-screen text-gray-300 font-sans">
+    <div className="flex min-h-screen dark:bg-[#0b0f19] bg-slate-50 dark:text-slate-200 text-slate-800 font-sans transition-colors duration-200">
       {/* 1. Sidebar bên trái */}
       <AdminSidebar />
 

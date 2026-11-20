@@ -13,7 +13,7 @@ const SuccessPage = () => {
     accountNum: '0368888888', // Số tk của bạn
     accountName: 'NGUYEN VAN A',
     amount: 'Theo đơn hàng',
-    content: `VTVKEY ${orderCode.replace('#', '')}`,
+    content: `PDTKEY ${orderCode.replace('#', '')}`,
   };
 
   // Tạo link QR VietQR xịn sò (Tự động điền nội dung)

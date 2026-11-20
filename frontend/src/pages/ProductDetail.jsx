@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import useCartStore from '../store/useCartStore';
 import useAuthStore from '../store/useAuthStore';
+import useLanguageStore from '../store/useLanguageStore';
 import axiosClient from '../store/axiosClient';
 import ProductCard from '../components/ProductCard';
 
@@ -29,6 +30,7 @@ const ProductDetail = () => {
   const { id, slug } = useParams();
   const currentParam = slug || id;
   const navigate = useNavigate();
+  const { t, translateCategory, translateProductName, formatPrice } = useLanguageStore();
 
   // Store
   const addToCart = useCartStore((state) => state.addToCart);
@@ -276,14 +278,14 @@ const ProductDetail = () => {
             </div>
             <div className="relative z-10 text-center sm:text-left flex-1">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-3 leading-tight text-shadow-md">
-                {product.name}
+                {translateProductName(product.name)}
               </h1>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-sm text-white mb-4">
                 <span className="bg-white/20 px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
-                  {product.category?.name}
+                  {translateCategory(product.category)}
                 </span>
                 <span className="flex items-center gap-1 bg-green-500/80 text-white px-2 py-1 rounded border border-white/20 text-xs font-bold animate-pulse shadow-sm">
-                  <Zap size={12} fill="currentColor" /> Giao ngay
+                  <Zap size={12} fill="currentColor" /> {t('instantDelivery')}
                 </span>
                 <span className="flex items-center gap-1 ml-2">
                   <Star
@@ -323,7 +325,7 @@ const ProductDetail = () => {
             )}
             <div>
               <h3 className="text-white font-bold mb-3 border-l-4 border-vtv-green pl-3">
-                Mô tả chi tiết
+                {t('productDescription')}
               </h3>
               <div
                 className={`prose prose-invert max-w-none text-sm leading-relaxed text-gray-300 whitespace-pre-line overflow-hidden transition-all duration-500 ease-in-out relative ${isExpanded ? 'max-h-full' : 'max-h-[200px]'}`}
@@ -367,8 +369,7 @@ const ProductDetail = () => {
           {/* --- KHU VỰC ĐÁNH GIÁ (NEW) --- */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <h3 className="text-white font-bold mb-6 flex items-center gap-2 border-b border-slate-800 pb-4">
-              <MessageSquare size={20} className="text-blue-400" /> Đánh giá sản
-              phẩm ({reviews.length})
+              <MessageSquare size={20} className="text-blue-400" /> {t('customerReviews')} ({reviews.length})
             </h3>
 
             {/* FORM VIẾT REVIEW (Chỉ hiện khi đủ điều kiện) */}
@@ -489,7 +490,7 @@ const ProductDetail = () => {
             {/* Chọn gói */}
             <div className="mb-6">
               <p className="text-xs text-gray-500 font-bold mb-3 block uppercase tracking-wider">
-                Chọn gói dịch vụ
+                {t('selectVariant')}
               </p>
               <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
                 {product.variants.map((v) => {
@@ -556,27 +557,27 @@ const ProductDetail = () => {
               {isOutOfStock ? (
                 <button
                   disabled
-                  className="w-full bg-slate-800 text-gray-500 font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2 border border-slate-700"
+                  className="w-full bg-slate-800 text-gray-500 font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2 border border-slate-700 uppercase"
                 >
-                  <AlertCircle size={20} /> TẠM HẾT HÀNG
+                  <AlertCircle size={20} /> {t('outOfStock')}
                 </button>
               ) : (
                 <>
                   <button
                     onClick={handleBuyNow}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] flex justify-center items-center gap-2 group"
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] flex justify-center items-center gap-2 group uppercase tracking-wider"
                   >
                     <Zap
                       size={20}
                       className="fill-white group-hover:scale-110 transition-transform"
                     />{' '}
-                    MUA NGAY
+                    {t('buyNow')}
                   </button>
                   <button
                     onClick={handleAddToCart}
                     className="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all border border-slate-700 hover:border-slate-500"
                   >
-                    <ShoppingCart size={18} /> Thêm vào giỏ
+                    <ShoppingCart size={18} /> {t('addToCart')}
                   </button>
                 </>
               )}
@@ -586,7 +587,7 @@ const ProductDetail = () => {
             <div className="mt-6 pt-4 border-t border-slate-800 space-y-3 text-sm text-gray-400">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={16} className="text-green-500" />
-                <span>Bảo hành trọn đời</span>
+                <span>{t('warranty1to1')}</span>
               </div>
               <div className="flex items-center gap-2">
                 {isOutOfStock ? (
@@ -594,7 +595,7 @@ const ProductDetail = () => {
                     <AlertCircle size={16} className="text-red-500" />
                     <span>
                       Trạng thái:{' '}
-                      <span className="text-red-500 font-bold">Hết hàng</span>
+                      <span className="text-red-500 font-bold">{t('outOfStock')}</span>
                     </span>
                   </>
                 ) : (

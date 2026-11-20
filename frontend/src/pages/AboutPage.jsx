@@ -8,8 +8,8 @@ const AboutPage = () => {
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-black text-white mb-4">
-            Về <span className="text-white mb-4">VTV</span>
-            <span className="text-vtv-green">KEY</span>
+            Về <span className="text-white mb-4">PDT</span>
+            <span className="text-blue-500">KEY</span>
           </h1>
           <p className="text-lg text-gray-400">
             Hệ thống cung cấp phần mềm bản quyền & giải pháp số hàng đầu Việt
@@ -22,16 +22,15 @@ const AboutPage = () => {
             Câu chuyện của chúng tôi
           </h2>
           <p className="mb-4 leading-relaxed">
-            Được thành lập vào năm 2025, VTVKey ra
+            Được thành lập vào năm 2025, PDTKey ra
             đời nhằm xóa bỏ rào cản trong việc tiếp cận bản quyền phần mềm tại
             Việt Nam. Chúng tôi tin rằng việc sở hữu bản quyền Windows, Office
             hay các tài khoản giải trí như Netflix, ChatGPT không nên là một
             gánh nặng chi phí.
           </p>
           <p className="leading-relaxed">
-            Tại VTVKey, mỗi sản phẩm trao tay khách hàng đều là lời cam kết trọn
-            đời dựa trên triết lý Verified - Trust - Value: Chất lượng được xác
-            thực, Niềm tin được khẳng định và Giá trị được lan tỏa.
+            Tại PDTKey, mỗi sản phẩm trao tay khách hàng đều là lời cam kết trọn
+            vẹn về chất lượng, uy tín và dịch vụ hỗ trợ tận tâm 24/7.
           </p>
         </div>
 

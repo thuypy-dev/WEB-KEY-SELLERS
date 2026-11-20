@@ -43,6 +43,18 @@ const ProfilePage = () => {
   // Form đổi thông tin
   const [fullName, setFullName] = useState(user?.fullName || '');
 
+  // Luôn làm mới thông tin từ server khi vào trang Profile
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  // Đồng bộ fullName khi user trong store thay đổi
+  useEffect(() => {
+    if (user?.fullName) {
+      setFullName(user.fullName);
+    }
+  }, [user?.fullName]);
+
   // State Avatar "Phông bạt"
   const [previewAvatar, setPreviewAvatar] = useState(null);
 

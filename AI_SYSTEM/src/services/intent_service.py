@@ -25,15 +25,18 @@ INDEX_NAME = 'intent_cache_1024_idx'
 
 class SemanticCache :
     def __init__(self):
+        self.r = None
         try : 
             self.r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
             self.r.ping()
             print('Kết nối Redis thành công')
         except Exception as e : 
-            print(f'Kết nối Redis thất bại {e}')
-            raise e
+            print(f'⚠️ [WARNING] Kết nối Redis thất bại ({e}). Tạm thời bỏ qua SemanticCache, AI vẫn hoạt động bình thường.')
+            self.r = None
+            return
+
         print(f'Cache loading model {EMBEDDING_MODEL_NAME}')
-        self.model =embedding_cache.get_model('AITeamVN/Vietnamese_Embedding')
+        self.model = embedding_cache.get_model('AITeamVN/Vietnamese_Embedding')
         real_dim = self.model.get_sentence_embedding_dimension()
         if real_dim != VECTOR_DIM : 
             print(f"⚠️ [WARNING] Config là {VECTOR_DIM} nhưng model là {real_dim}. Đang tự động fix...")
@@ -45,6 +48,8 @@ class SemanticCache :
         self._create_index()
 
     def _create_index (self) : 
+        if not self.r:
+            return
         try : 
             info = self.r.ft(INDEX_NAME).info()
             print(f'Redis index {INDEX_NAME} đã tồn tại')
@@ -65,11 +70,15 @@ class SemanticCache :
             self.r.ft(INDEX_NAME).create_index(schema, definition=definition)
     
     def get_embedding(self, text : str) -> bytes : 
+        if not hasattr(self, 'model') or not self.model:
+            self.model = embedding_cache.get_model('AITeamVN/Vietnamese_Embedding')
         vector = self.model.encode(text)
         vector_np = np.array(vector)
         return vector_np.astype(np.float32).tobytes()
     
     def check_cache(self, user_query : str, thresold : float = 0.15) -> Optional[Dict] : 
+        if not self.r:
+            return None
         try : 
             query_vector = self.get_embedding(user_query)
             q = Query(f"*=>[KNN 1 @embedding $vec AS score]")\
@@ -89,6 +98,8 @@ class SemanticCache :
             print(f'Cache ERROR {e}')
             return None
     def set_cache(self, user_query : str, response_data : Dict, ttl : int = 3600) : 
+        if not self.r:
+            return
         try : 
             vector = self.get_embedding(user_query)
             query_hash = hashlib.md5(user_query.encode('utf-8')).hexdigest()
@@ -125,7 +136,7 @@ class IntentService :
 }
         if(model is None) : 
             
-            self.model = genai.GenerativeModel(model_name='gemma-3-27b-it', 
+            self.model = genai.GenerativeModel(model_name='gemma-4-26b-a4b-it', 
                                                generation_config=self.generation_config,
                                                 safety_settings= self.safety_settings)
         else : 
@@ -135,15 +146,11 @@ class IntentService :
     async def detectIntent(self, user_text : str) -> dict :
         try : 
             prompt = f"""
-            Bạn là chuyên gia phân loại ý định (NLU) cho hệ thống bán tài khoản số VTV_KEY.
+            Bạn là chuyên gia phân loại ý định (NLU) cho hệ thống bán tài khoản số PDTKEY.
             
             NHIỆM VỤ CỦA BẠN:
             Phân tích câu nói của người dùng và trả về JSON duy nhất.
-
-            QUY TRÌNH SUY LUẬN (Làm ngầm, không in ra):
-            1. Xác định đối tượng được nhắc đến: Là "Bot/AI" (danh tính) hay là "Sản phẩm" (hàng hóa).
-            2. Nếu là hàng hóa: Người dùng đã gọi ĐÚNG TÊN (Netflix, ChatGPT) hay chỉ gọi DANH MỤC (App xem phim, AI)?
-            3. Chọn Intent phù hợp nhất từ danh sách dưới đây.
+            QUY ĐỊNH BẮT BUỘC: Chỉ trả về duy nhất chuỗi JSON kết quả. Tuyệt đối KHÔNG in ra các bước suy luận, giải thích hay bất kỳ ký tự nào khác ngoài JSON.
 
             DANH SÁCH INTENT :
             
@@ -211,10 +218,23 @@ class IntentService :
             
             print(f"🐢 [CACHE MISS] '{user_text}' -> Calling AI...")
 
+            import re
             respone = await self.model.generate_content_async(prompt)
             raw_text = respone.text.strip()
-            clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-            result = json.loads(clean_text)
+            
+            # Trích xuất JSON an toàn (kể cả khi AI trả về giải thích hoặc markdown thừa)
+            json_str = None
+            code_block = re.search(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', raw_text)
+            if code_block:
+                json_str = code_block.group(1).strip()
+            else:
+                curly = re.search(r'(\{[\s\S]*\})', raw_text)
+                if curly:
+                    json_str = curly.group(1).strip()
+                else:
+                    json_str = raw_text.replace("```json", "").replace("```", "").strip()
+
+            result = json.loads(json_str)
             
             final_result = defult_result | result
             if final_result.get("intent") : 

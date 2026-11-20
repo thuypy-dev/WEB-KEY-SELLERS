@@ -1,29 +1,44 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
-// --- Dùng '* as' để tránh lỗi undefined nếu có tạm thời hong có thì thôi ---
-// import * as cookieParser from 'cookie-parser';
 import cookieParser from 'cookie-parser'; 
-
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import * as express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
-  // 1. Bảo mật Header (Che thông tin server, chống XSS)
+  // 1. Nhận diện Real IP phía sau Reverse Proxy (Nginx, Cloudflare, Traefik, Docker)
+  // Đảm bảo ThrottlerGuard chặn đúng IP thực của kẻ tấn công thay vì chặn IP nội bộ của proxy
+  app.set('trust proxy', 1);
+
+  // 2. Bảo mật Header (Che thông tin server, chống XSS, clickjacking)
   app.use(helmet());
 
-  // 2. Đọc Cookie từ request (Quan trọng cho Auth)
+  // 3. Chống DoS: Giới hạn kích thước Body tối đa 2MB (Tránh treo RAM server do Payload Bomb)
+  app.use(express.json({ limit: '2mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+  // 4. Đọc Cookie từ request (Quan trọng cho Auth)
   app.use(cookieParser());
 
-  // 3. Cấu hình CORS (Cho phép Frontend gọi API và gửi Cookie)
+  // 5. Cấu hình CORS (Cho phép Frontend gọi API và gửi Cookie)
+  const allowedOrigins = [
+    'http://localhost:5000',
+    'http://localhost:5173',
+    ...(process.env.FRONTEND_URL
+      ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
+      : []),
+  ];
+
   app.enableCors({
-    origin : ['http://localhost:5000', 'http://localhost:5173'], 
-    credentials : true
+    origin: allowedOrigins,
+    credentials: true,
   });
 
-  // 4. Validate dữ liệu đầu vào (DTO)
+  // 6. Validate dữ liệu đầu vào (DTO)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist : true, // Tự động bỏ các trường thừa không có trong DTO
@@ -31,6 +46,12 @@ async function bootstrap() {
       transform : true, // Tự động convert kiểu (vd: string '1' -> number 1)
     })
   );
-  await app.listen(process.env.PORT ?? 3000);
+
+  const server = await app.listen(process.env.PORT ?? 3000);
+
+  // 7. Chống Slowloris DoS Attack: Hủy các kết nối treo lâu không gửi dữ liệu (Đặt 2 phút để đủ thời gian cho AI Chatbot suy nghĩ)
+  server.setTimeout(120000); 
+  server.headersTimeout = 125000;
+  server.keepAliveTimeout = 120000;
 }
 bootstrap();

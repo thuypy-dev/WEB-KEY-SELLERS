@@ -10,10 +10,12 @@ import { ChevronLeft, ChevronRight, ShoppingCart, Zap } from 'lucide-react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import useCartStore from '../store/useCartStore';
 import useAuthStore from '../store/useAuthStore';
+import useLanguageStore from '../store/useLanguageStore';
 import axiosClient from '../store/axiosClient';
 
 // --- COMPONENT CARD RIÊNG BIỆT ---
-const ContextAwareCard = ({ product, handleAddToCart, formatCurrency }) => {
+const ContextAwareCard = ({ product, handleAddToCart }) => {
+  const { translateProductName, formatPrice } = useLanguageStore();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
@@ -103,9 +105,9 @@ const ContextAwareCard = ({ product, handleAddToCart, formatCurrency }) => {
           <div className="p-4 flex flex-col flex-grow bg-gradient-to-b from-transparent to-slate-900/95">
             <h3
               className="text-white font-bold text-sm line-clamp-2 mb-3 h-10 overflow-hidden group-hover/card:text-vtv-green transition-colors"
-              title={product.name}
+              title={translateProductName(product.name)}
             >
-              {product.name}
+              {translateProductName(product.name)}
             </h3>
 
             <div className="mt-auto flex justify-between items-end">
@@ -114,7 +116,7 @@ const ContextAwareCard = ({ product, handleAddToCart, formatCurrency }) => {
                   parseFloat(minVariant.price) && (
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[10px] text-slate-400 line-through">
-                      {formatCurrency(minVariant.orginalPrice)}
+                      {formatPrice(minVariant.orginalPrice)}
                     </span>
                     {discountPercent > 0 && (
                       <span className="text-[10px] text-red-500 font-bold">
@@ -124,7 +126,7 @@ const ContextAwareCard = ({ product, handleAddToCart, formatCurrency }) => {
                   </div>
                 )}
                 <span className="text-vtv-green font-black text-lg leading-none">
-                  {formatCurrency(minVariant.price)}
+                  {formatPrice(minVariant.price)}
                 </span>
               </div>
 
@@ -147,6 +149,7 @@ const HotTrend = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCooldown, setIsCooldown] = useState(false);
   const autoPlayRef = useRef(null);
+  const { t } = useLanguageStore();
 
   const addToCart = useCartStore((state) => state.addToCart);
   const user = useAuthStore((state) => state.user);
@@ -224,17 +227,17 @@ const HotTrend = ({ products }) => {
               className="text-yellow-400 fill-yellow-400 animate-pulse"
               size={32}
             />
-            XẢ KHO ĐÓN TẾT 2026
+            {t('hotTrendTitle')}
           </h2>
           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
-            Deal hời giá sốc - Số lượng có hạn
+            {t('hotTrendSubtitle')}
           </p>
         </div>
         <Link
           to="/products"
           className="bg-slate-800 hover:bg-vtv-green hover:text-black transition-colors px-5 py-2 rounded-full font-bold text-sm text-white border border-slate-700"
         >
-          Xem tất cả
+          {t('viewAll')}
         </Link>
       </div>
 
@@ -267,7 +270,6 @@ const HotTrend = ({ products }) => {
                 key={product.id}
                 product={product}
                 handleAddToCart={handleAddToCart}
-                formatCurrency={formatCurrency}
               />
             ))}
           </motion.div>

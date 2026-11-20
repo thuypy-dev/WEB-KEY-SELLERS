@@ -58,3 +58,12 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /generated/prisma
 .vscode/settings.json
 .test
+
+# Agent & Graphify
+.agents/
+graphify-out/
+
+# Local run scripts
+run-ai.bat
+run-ai.ps1
+

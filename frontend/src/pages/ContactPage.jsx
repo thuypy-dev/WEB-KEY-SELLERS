@@ -24,7 +24,7 @@ const ContactPage = () => {
                   <p className="text-xs text-gray-500 font-bold uppercase mb-1">
                     Email
                   </p>
-                  <p className="text-white font-medium">support@vtvkey.com</p>
+                  <p className="text-white font-medium">support@pdtkey.com</p>
                 </div>
               </li>
               <li className="flex items-center gap-4">

@@ -23,7 +23,7 @@ async function create() {
             create : {
                 email : email,
                 password : passwordHashed,
-                fullName : 'TRẦN CHÍ VĨ',
+                fullName : 'Quản trị viên',
                 role : Role.ADMIN
             }
         });

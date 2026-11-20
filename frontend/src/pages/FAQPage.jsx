@@ -5,7 +5,7 @@ const FAQPage = () => {
   const faqs = [
     {
       q: 'Sau khi thanh toán bao lâu thì nhận được Key?',
-      a: 'Hệ thống của VTVKey là tự động 100%. Bạn sẽ nhận được Key ngay lập tức qua Email và trong phần Lịch sử đơn hàng sau khi thanh toán thành công.',
+      a: 'Hệ thống của PDTKey là tự động 100%. Bạn sẽ nhận được Key ngay lập tức qua Email và trong phần Lịch sử đơn hàng sau khi thanh toán thành công.',
     },
     {
       q: 'Chính sách bảo hành như thế nào?',
@@ -13,7 +13,7 @@ const FAQPage = () => {
     },
     {
       q: 'Tôi có thể hoàn tiền không?',
-      a: 'VTVKey hỗ trợ hoàn tiền 100% nếu sản phẩm bị lỗi mà chúng tôi không thể khắc phục hoặc đổi mới trong vòng 24h.',
+      a: 'PDTKey hỗ trợ hoàn tiền 100% nếu sản phẩm bị lỗi mà chúng tôi không thể khắc phục hoặc đổi mới trong vòng 24h.',
     },
     {
       q: 'Shop có xuất hóa đơn VAT không?',

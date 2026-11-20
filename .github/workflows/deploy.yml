@@ -1,0 +1,19 @@
+name: Deploy to NUC Server
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on:
+      group: NucServer
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Deploy with Docker Compose
+        run: |
+          chmod +x deploy-nuc.sh
+          ./deploy-nuc.sh

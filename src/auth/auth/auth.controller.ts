@@ -11,6 +11,8 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { GetUser } from '../decorators/get_user.decorator';
 import type { RequestWithUser } from '../interfaces/request_user.interface';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 
 @Controller('auth')
@@ -34,9 +36,9 @@ export class AuthController {
 
         res.cookie('refreshToken', data.refreshToken, {
             httpOnly: true, // cấm Js đọc, tránh hacker trộm token bằng mã độc (XSS)
-            sameSite: 'lax', // hạn chế gửi chén tránh web lạ gửi lệnh mạo danh
-            //secure : true, // chỉ dùng https, tránh mimd
-            maxAge: 30 * 24 * 60 * 1000, // tự hủy token
+            sameSite: 'lax', // hạn chế gửi chéo tránh web lạ gửi lệnh mạo danh
+            //secure : true, // chỉ dùng https, tránh mitm
+            maxAge: 30 * 24 * 60 * 60 * 1000, // tự hủy token (30 ngày)
         });
         return {
             accessToken: data.accessToken,
@@ -107,13 +109,26 @@ export class AuthController {
     }
 
     @Post('change-password')
-  @UseGuards(JwtAuthGuard) // Bắt buộc phải đăng nhập mới được đổi
-  @HttpCode(HttpStatus.OK)
-  async changePassword(
-    @GetUser('userId') userId: string, 
-    @Body() dto: ChangePasswordDto
-  ) {
-    return await this.authService.changePassword(userId, dto);
-  }
+    @UseGuards(JwtAuthGuard) // Bắt buộc phải đăng nhập mới được đổi
+    @HttpCode(HttpStatus.OK)
+    async changePassword(
+        @GetUser('userId') userId: string, 
+        @Body() dto: ChangePasswordDto
+    ) {
+        return await this.authService.changePassword(userId, dto);
+    }
 
+    @Post('forgot-password')
+    @Throttle({ default: { limit: 5, ttl: 60000 } }) // Chống spam gửi mail (5 lần / phút)
+    @HttpCode(HttpStatus.OK)
+    async forgotPassword(@Body() dto: ForgotPasswordDto) {
+        return await this.authService.forgotPassword(dto);
+    }
+
+    @Post('reset-password')
+    @Throttle({ default: { limit: 5, ttl: 60000 } }) // Chống brute-force dò OTP (5 lần / phút)
+    @HttpCode(HttpStatus.OK)
+    async resetPassword(@Body() dto: ResetPasswordDto) {
+        return await this.authService.resetPassword(dto);
+    }
 }

@@ -56,7 +56,7 @@ const MaintenancePage = () => {
           </button>
 
           <div className="flex gap-3">
-            <a href="mailto:support@vtvkeys.com" className="flex-1">
+            <a href="mailto:support@pdtkey.com" className="flex-1">
               <button className="w-full bg-slate-800 text-white font-medium py-3 rounded-xl hover:bg-slate-700 transition flex items-center justify-center gap-2 border border-slate-700">
                 <Mail size={18} /> Liên hệ hỗ trợ
               </button>

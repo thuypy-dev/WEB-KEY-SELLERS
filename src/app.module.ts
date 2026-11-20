@@ -12,6 +12,7 @@ import { StorefrontModule } from './storefront/storefront.module';
 import { MaintenanceGuard } from './common/guards/maintenance.guard';
 import { AuthController } from './auth/auth/auth.controller';
 import { AuthService } from './auth/auth/auth.service';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuthService } from './auth/auth/auth.service';
       ttl: 60000, // Thời gian sống: 60000ms = 60 giây
       limit: 150, // Giới hạn: Tối đa 100 request mỗi 60 giây cho 1 IP
     }]),
+    MailModule,
     AuthModule,
     PrismaModule,
     JwtModule,

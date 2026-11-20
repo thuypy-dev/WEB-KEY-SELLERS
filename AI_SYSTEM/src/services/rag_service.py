@@ -33,7 +33,7 @@ class RAGService :
         logger.info('Đang tiến hành khởi tạo embedding')
         try : 
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            self.llm = genai.GenerativeModel(model_name='gemma-3-27b-it')
+            self.llm = genai.GenerativeModel(model_name='gemma-4-26b-a4b-it')
             self.chroma_client = chromadb.PersistentClient(path='./chroma_db_data')
             self.embedding_fn = SharedEmbeddingFunction()
             self.text_splitters = RecursiveCharacterTextSplitter(
@@ -186,6 +186,12 @@ class RAGService :
             logger.warning(f"Đồng bộ dữ liệu thất bại {e}")
 
     def _needs_rewrite(self, text : str) -> bool : 
+        # Nếu là lời chào hỏi xã giao -> Không rewrite để tránh làm sai lệch và tốn thời gian
+        greetings = ["hi", "hello", "helo", "hêlo", "alo", "chào", "chào bạn", "chào shop", "bye", "tạm biệt", "cảm ơn", "thanks"]
+        clean = text.lower().strip()
+        if clean in greetings or any(clean.startswith(g + " ") for g in greetings):
+            return False
+
         pronouns = ["nó", "đó", "này", "kia", "ấy", "cái gì", "trên", "dưới"]
         for word in pronouns :
             if word in text : 
@@ -237,7 +243,7 @@ class RAGService :
             results = self.collection.query(
                 query_texts=[final_query],
                 n_results=5,
-                where=where_filter
+                where=where_filter if where_filter else None
             )
 
             valid_docs  = []
@@ -271,15 +277,15 @@ class RAGService :
             context_text = ''
         
         prompt = f"""
-        Bạn là trợ lý ảo Vituvu.
+        Bạn là trợ lý ảo PDTKEY (Fairy).
         Dữ liệu tham khảo:
         {context_text}
         
         Yêu cầu:
         1. Trả lời câu hỏi dựa trên dữ liệu trên.
         2. Nếu không có dữ liệu phù hợp (context rỗng hoặc không liên quan), hãy nói khéo là bạn chưa có thông tin.
-        3. Ngắn gọn, thân thiện.
-        4. Không gửi kèm các kí tự xuống dòng 
+        3. Ngắn gọn, thân thiện, đầy đủ thông tin chính xác.
+        4. BẮT ĐẦU CÂU TRẢ LỜI CỦA BẠN BẰNG TỪ KHÓA: "Trả lời:"
         
         Câu hỏi: {user_question}
         Trả lời:
@@ -287,8 +293,15 @@ class RAGService :
 
         try : 
             response = self.llm.generate_content(prompt)
-            bot_answer =  response.text
-        except  Exception : 
+            raw_text = response.text.strip()
+            if "Trả lời:" in raw_text:
+                bot_answer = raw_text.split("Trả lời:")[-1].strip()
+            elif "Answer:" in raw_text:
+                bot_answer = raw_text.split("Answer:")[-1].strip()
+            else:
+                bot_answer = raw_text
+        except Exception as e : 
+            logger.error(f"Lỗi gọi LLM: {e}")
             bot_answer = 'Xin lỗi hệ thống đang bận quá, hãy thử lại sau nhé!'
 
         return {

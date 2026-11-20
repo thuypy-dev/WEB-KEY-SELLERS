@@ -9,6 +9,9 @@ import { SignupDto } from '../dto/signup.dto';
 import { LoginDto } from '../dto/login.dto';
 import { Prisma } from '@prisma/client';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { MailService } from '../../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +20,7 @@ export class AuthService {
         private readonly prisma: PrismaService,
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
+        private readonly mailService: MailService,
     ) { }
 
     // --- ĐĂNG KÝ ---
@@ -194,5 +198,95 @@ export class AuthService {
         });
 
         return { message: 'Đổi mật khẩu thành công' };
+    }
+
+    // --- QUÊN MẬT KHẨU (GỬI OTP) ---
+    async forgotPassword(dto: ForgotPasswordDto) {
+        const email = dto.email.trim().toLowerCase();
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+        });
+
+        // Bảo mật: Tránh user enumeration attack
+        if (!user) {
+            return {
+                message: 'Nếu email tồn tại trên hệ thống, mã xác thực OTP đã được gửi đến hộp thư của bạn.',
+            };
+        }
+
+        // Sinh mã OTP 6 số ngẫu nhiên (100000 - 999999)
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
+        // Xóa các OTP cũ của email này
+        await this.prisma.passwordResetOtp.deleteMany({
+            where: { email: user.email },
+        });
+
+        // Lưu OTP mới
+        await this.prisma.passwordResetOtp.create({
+            data: {
+                email: user.email,
+                otp,
+                expiresAt,
+            },
+        });
+
+        // Gửi email
+        await this.mailService.sendPasswordResetOtp(user.email, otp, user.fullName || undefined);
+
+        return {
+            message: 'Mã xác thực OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư!',
+        };
+    }
+
+    // --- ĐẶT LẠI MẬT KHẨU (XÁC THỰC OTP) ---
+    async resetPassword(dto: ResetPasswordDto) {
+        const email = dto.email.trim().toLowerCase();
+
+        // 1. Tìm bản ghi OTP
+        const otpRecord = await this.prisma.passwordResetOtp.findFirst({
+            where: {
+                email,
+                otp: dto.otp.trim(),
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        if (!otpRecord) {
+            throw new BadRequestException('Mã OTP không chính xác hoặc đã được sử dụng');
+        }
+
+        if (new Date() > otpRecord.expiresAt) {
+            await this.prisma.passwordResetOtp.deleteMany({ where: { email } });
+            throw new BadRequestException('Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới!');
+        }
+
+        // 2. Tìm User
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            throw new BadRequestException('Tài khoản không tồn tại trên hệ thống');
+        }
+
+        // 3. Hash mật khẩu mới bằng Argon2
+        const newHashedPassword = await argon2.hash(dto.newPassword);
+
+        // 4. Cập nhật mật khẩu và xóa OTP
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { password: newHashedPassword },
+        });
+
+        await this.prisma.passwordResetOtp.deleteMany({ where: { email } });
+
+        // 5. Thu hồi tất cả Refresh Token cũ của user này để buộc đăng xuất khỏi các phiên cũ
+        await this.prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+
+        return {
+            message: 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.',
+        };
     }
 }

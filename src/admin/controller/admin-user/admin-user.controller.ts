@@ -1,15 +1,21 @@
-import { Controller, Get, Param, Query, UseGuards, DefaultValuePipe, ParseIntPipe, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, UseGuards, DefaultValuePipe, ParseIntPipe, Patch, Body } from '@nestjs/common';
 import { AdminUserService } from '../../services/admin-user/admin-user.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RoleGuard } from '../../guard/role.guard';
 import { Roles } from '../../decorator/role.decorator';
 import { Role } from '@prisma/client';
+import { CreateStaffDto } from '../../dto/create-staff.dto';
 
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Roles(Role.ADMIN)
-export class UserController { // Đổi tên class thành AdminUserController cho chuẩn cũng được
+export class UserController {
   constructor(private readonly userService: AdminUserService) {}
+
+  @Post()
+  create(@Body() data: CreateStaffDto) {
+    return this.userService.createStaff(data);
+  }
 
   @Get()
   findAll(

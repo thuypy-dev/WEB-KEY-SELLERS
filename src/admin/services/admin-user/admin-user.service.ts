@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, Role } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
+import { CreateStaffDto } from '../../dto/create-staff.dto';
 
 @Injectable()
 export class AdminUserService {
@@ -77,22 +78,64 @@ export class AdminUserService {
     const { password, ...result } = user; 
     return result;
   }
-  // --- 3. CẬP NHẬT THÔNG TIN USER ---
-  async update(id: string, data: any) {
-    const updateData: any = {
+
+  // --- 3. TẠO TÀI KHOẢN NHÂN VIÊN MỚI ---
+  async createStaff(data: CreateStaffDto) {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+    if (existing) {
+      throw new BadRequestException('Email này đã được sử dụng');
+    }
+
+    const rawPassword = data.password && data.password.trim() !== '' ? data.password : 'Staff@123456';
+    const passwordHash = await argon2.hash(rawPassword);
+
+    const staff = await this.prisma.user.create({
+      data: {
+        email: data.email,
+        password: passwordHash,
         fullName: data.fullName,
-        // ... các trường khác nếu cần
-    };
+        role: data.role === Role.ADMIN ? Role.ADMIN : Role.SUPPORT,
+      },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        balance: true,
+        createdAt: true,
+        _count: {
+          select: { orders: true },
+        },
+      },
+    });
+
+    return staff;
+  }
+
+  // --- 4. CẬP NHẬT THÔNG TIN / VAI TRÒ USER ---
+  async update(id: string, data: any) {
+    const updateData: any = {};
+    if (data.fullName !== undefined) updateData.fullName = data.fullName;
+    if (data.role !== undefined) updateData.role = data.role;
 
     // Nếu có gửi password lên thì mới hash và cập nhật
     if (data.password && data.password.trim() !== '') {
-        const salt = await bcrypt.genSalt(10);
-        updateData.password = await bcrypt.hash(data.password, salt);
+      updateData.password = await argon2.hash(data.password);
     }
 
     return await this.prisma.user.update({
-        where: { id },
-        data: updateData
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        balance: true,
+        createdAt: true,
+      },
     });
   }
 }

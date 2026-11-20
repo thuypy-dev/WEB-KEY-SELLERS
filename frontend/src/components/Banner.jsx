@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import useLanguageStore from '../store/useLanguageStore';
 
 // 1. CẤU HÌNH DANH SÁCH BANNER FULL OPTION (9 SẢN PHẨM)
 const SLIDES = [
@@ -158,6 +159,7 @@ const SLIDES = [
 
 const Banner = () => {
   const [current, setCurrent] = useState(0);
+  const { t } = useLanguageStore();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -261,7 +263,7 @@ const Banner = () => {
                     to={SLIDES[current].url}
                     className={`${SLIDES[current].btnColor} px-8 py-4 rounded-xl font-bold shadow-lg transform hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group/btn`}
                   >
-                    MUA NGAY{' '}
+                    {t('buyNow')}{' '}
                     <ArrowRight
                       size={20}
                       className="group-hover/btn:translate-x-1 transition-transform"
@@ -270,7 +272,7 @@ const Banner = () => {
 
                   <div className="text-center md:text-left">
                     <p className="text-gray-400 text-xs font-medium uppercase">
-                      Giá khuyến mãi
+                      {t('specialPrice')}
                     </p>
                     <p className="text-white font-bold text-xl md:text-2xl">
                       {SLIDES[current].price}
@@ -313,9 +315,9 @@ const Banner = () => {
                     />
                     <div>
                       <p className="text-[10px] text-gray-300 font-bold uppercase">
-                        Bán chạy
+                        {t('bestSeller')}
                       </p>
-                      <p className="text-white font-bold text-xs">Top #1</p>
+                      <p className="text-white font-bold text-xs">{t('topOne')}</p>
                     </div>
                   </motion.div>
                 </div>

@@ -51,16 +51,22 @@ export class ChatService {
         });
 
         let bot_intent ;
-        let botAnswer = "Xin lỗi, hiện vituvu đang bảo trì một chút";
+        let botAnswer = "Xin lỗi, hiện trợ lý ảo đang bảo trì một chút";
         let recommendedProducts : any[] = [];
         try {
             const pythonUrl = 'http://localhost:8000/api/v1/ask';
             const response = await lastValueFrom(
-                this.httpService.post(pythonUrl, {
-                    question : userContent,
-                    history : historyForAI
-                })
-            )
+                this.httpService.post(
+                    pythonUrl,
+                    {
+                        question: userContent,
+                        history: historyForAI,
+                    },
+                    {
+                        timeout: 120000, // 120s timeout để chờ AI service xử lý
+                    },
+                ),
+            );
 
             const data = response.data ;
 

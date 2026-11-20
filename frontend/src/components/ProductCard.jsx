@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Sparkles } from 'lucide-react';
 import useCartStore from '../store/useCartStore';
 import useAuthStore from '../store/useAuthStore';
+import useLanguageStore from '../store/useLanguageStore';
 import axiosClient from '../store/axiosClient';
 
 const formatCurrency = (amount) =>
@@ -12,7 +13,8 @@ const formatCurrency = (amount) =>
 
 const ProductCard = ({ product }) => {
   const addToCart = useCartStore((state) => state.addToCart);
-  const user = useAuthStore((state) => state.user); // Lấy thông tin User
+  const user = useAuthStore((state) => state.user);
+  const { t, translateCategory, translateProductName, formatPrice } = useLanguageStore();
 
   const getDiscountPercent = (variant) => {
     if (variant && parseFloat(variant.orginalPrice) > parseFloat(variant.price)) {
@@ -46,10 +48,9 @@ const ProductCard = ({ product }) => {
   const discountPercent = getDiscountPercent(minVariant);
 
   const handleAddToCart = (e) => {
-    e.preventDefault(); // Ngăn chặn Link điều hướng vào trang chi tiết
+    e.preventDefault();
     addToCart(product, minVariant);
 
-    // LOG HÀNH ĐỘNG ADD_TO_CART ---
     if (user?.id) {
       axiosClient
         .post('/interactions/log', {
@@ -63,92 +64,81 @@ const ProductCard = ({ product }) => {
 
   return (
     <Link to={`/product/${product.slug}`} className="group block h-full">
-      {/* Container Chính */}
-      <div className="bg-slate-800/40 border border-slate-700 rounded-xl h-full flex flex-col justify-between transition-all duration-300 hover:border-vtv-green hover:-translate-y-1 hover:shadow-xl hover:shadow-vtv-green/10 overflow-hidden relative shadow-md">
-        {/* --- HEADER --- */}
-        <div className="relative overflow-hidden p-3">
+      {/* Container Thẻ Glassmorphism */}
+      <div className="rounded-2xl h-full flex flex-col justify-between transition-all duration-300 border border-slate-200 dark:border-white/10 dark:bg-[#111827]/75 bg-white backdrop-blur-md hover:border-blue-500/80 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-blue-500/10 overflow-hidden relative shadow-sm">
+        
+        {/* Phần Thân Header Thẻ */}
+        <div className="relative overflow-hidden p-4">
           {product.thumbnail && (
-            <>
-              {/* LỚP AMBIENT HEADER */}
-              <div
-                className="absolute inset-0 w-full h-full bg-cover bg-center blur-xl scale-150 opacity-30 transition-opacity duration-500 group-hover:opacity-50"
-                style={{ backgroundImage: `url(${product.thumbnail})` }}
-              ></div>
-              <div className="absolute inset-0 bg-black/20"></div>
-            </>
+            <div
+              className="absolute inset-0 w-full h-full bg-cover bg-center blur-2xl scale-150 opacity-20 dark:opacity-30 transition-opacity duration-500 group-hover:opacity-40"
+              style={{ backgroundImage: `url(${product.thumbnail})` }}
+            ></div>
           )}
 
-          <div className="flex gap-3 relative z-10">
-            {/* KHU VỰC ẢNH ICON */}
-            <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-lg relative border border-slate-700/50 overflow-hidden shadow-sm">
+          <div className="flex gap-3.5 relative z-10">
+            {/* Ảnh Icon Sản Phẩm */}
+            <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-xl relative border border-slate-200 dark:border-white/10 overflow-hidden shadow-sm dark:bg-slate-900 bg-slate-100 flex items-center justify-center">
               {product.thumbnail ? (
-                <>
-                  <div
-                    className="absolute inset-0 w-full h-full bg-cover bg-center blur-md scale-150 opacity-60"
-                    style={{ backgroundImage: `url(${product.thumbnail})` }}
-                  ></div>
-                  <div className="absolute inset-0 rounded-lg overflow-hidden z-10">
-                    <img
-                      src={product.thumbnail}
-                      alt={product.name}
-                      className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110"
-                    />
-                  </div>
-                </>
+                <img
+                  src={product.thumbnail}
+                  alt={product.name}
+                  className="w-full h-full object-contain p-1.5 transition-transform duration-500 group-hover:scale-110"
+                />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-xl bg-slate-800 text-slate-500 rounded-lg">
-                  📦
-                </div>
+                <span className="text-2xl">📦</span>
               )}
             </div>
 
-            {/* Tên & Danh mục */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center drop-shadow-sm">
+            {/* Tên & Tag Danh Mục */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <span className="inline-block self-start px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider mb-1.5 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 bg-blue-50 text-blue-600 border border-blue-200">
+                {translateCategory(product.category)}
+              </span>
               <h3
-                className="text-white font-bold text-sm leading-tight truncate group-hover:text-vtv-green transition-colors mb-1"
-                title={product.name}
+                className="text-slate-900 dark:text-white font-bold text-sm sm:text-base leading-snug truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+                title={translateProductName(product.name)}
               >
-                {product.name}
+                {translateProductName(product.name)}
               </h3>
-              <p className="text-slate-300 text-[10px] sm:text-xs uppercase tracking-wide truncate font-medium">
-                {product.category?.name || 'VTV Key'}
-              </p>
             </div>
           </div>
         </div>
 
-        {/* --- FOOTER --- */}
-        <div className="flex items-end justify-between p-3 border-t border-slate-700/50 relative z-10 bg-slate-900/50 backdrop-blur-sm">
-          <div className="hidden sm:block bg-slate-800 text-[#a3e635] text-[10px] font-bold px-2 py-1 rounded border border-slate-700">
-            KHUYẾN MÃI
+        {/* --- FOOTER GIÁ & NÚT THAO TÁC --- */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 dark:border-white/5 relative z-10 dark:bg-[#0d1424]/80 bg-slate-50/80 backdrop-blur-sm">
+          {/* Badge Khuyến Mãi / Tag */}
+          <div className="flex items-center gap-1.5">
+            {discountPercent > 0 ? (
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+                -{discountPercent}%
+              </span>
+            ) : (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.5 rounded-md text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                <Sparkles size={10} /> {t('inStock')}
+              </span>
+            )}
           </div>
 
-          <div className="flex items-end gap-3 flex-1 justify-end">
+          {/* Giá & Nút Thêm Giỏ Hàng */}
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              {parseFloat(minVariant.orginalPrice) >
-                parseFloat(minVariant.price) && (
-                <div className="text-[10px] text-slate-500 flex items-center justify-end gap-1 mb-0.5">
-                  <span className="line-through">
-                    {formatCurrency(minVariant.orginalPrice)}
-                  </span>
-                  {discountPercent > 0 && (
-                    <span className="text-red-500 font-bold">
-                      -{discountPercent}%
-                    </span>
-                  )}
+              {parseFloat(minVariant.orginalPrice) > parseFloat(minVariant.price) && (
+                <div className="text-[10px] text-slate-400 line-through font-mono">
+                  {formatPrice(minVariant.orginalPrice)}
                 </div>
               )}
-              <div className="text-white font-bold text-sm sm:text-base leading-none">
-                {formatCurrency(minVariant.price)}
+              <div className="text-slate-900 dark:text-white font-mono font-bold text-sm sm:text-base leading-none">
+                {formatPrice(minVariant.price)}
               </div>
             </div>
 
             <button
               onClick={handleAddToCart}
-              className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:border-vtv-green hover:bg-vtv-green/10 transition-all active:scale-95 bg-slate-900"
-              title="Thêm vào giỏ"
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-white hover:bg-blue-600 hover:border-blue-600 dark:hover:bg-blue-600 dark:hover:border-blue-600 dark:bg-slate-800 bg-white transition-all active:scale-95 shadow-sm"
+              title={t('addToCart')}
             >
-              <ShoppingCart size={14} />
+              <ShoppingCart size={15} />
             </button>
           </div>
         </div>
