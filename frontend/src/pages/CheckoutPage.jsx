@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, QrCode, ArrowLeft, Loader } from 'lucide-react'; // Thêm Loader cho đẹp
+import { ShieldCheck, QrCode, ArrowLeft, Loader, Copy, Check, Download, AlertCircle } from 'lucide-react';
 import useCartStore from '../store/useCartStore';
 import useAuthStore from '../store/useAuthStore';
 import axiosClient from '../store/axiosClient';
@@ -13,16 +13,34 @@ const formatCurrency = (amount) =>
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cart, clearCart } = useCartStore();
-
-  //QUAN TRỌNG: Lấy thông tin user đang đăng nhập
   const { user } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
+  const [copiedField, setCopiedField] = useState(null);
+
+  // Cấu hình thông tin thanh toán ngân hàng (ưu tiên biến môi trường VITE_ hoặc mặc định)
+  const BANK_ID = import.meta.env.VITE_BANK_ID || 'MB';
+  const BANK_NAME = import.meta.env.VITE_BANK_NAME || 'MB Bank (Ngân hàng Quân Đội)';
+  const BANK_ACCOUNT_NO = import.meta.env.VITE_BANK_ACCOUNT_NO || '0912345678';
+  const BANK_ACCOUNT_NAME = import.meta.env.VITE_BANK_ACCOUNT_NAME || 'PHAN DUC THUY';
+
   // Tính tổng tiền
   const totalAmount = cart.reduce((total, item) => {
     const price = parseFloat(item.selectedVariant?.price || item.price) || 0;
     return total + price * item.quantity;
   }, 0);
+
+  // Nội dung chuyển khoản duy nhất cho đơn hàng
+  const transferContent = `PDTKEY ${user?.id ? user.id.slice(-6).toUpperCase() : 'ORDER'}`;
+
+  // Link mã VietQR thật động tạo chuẩn NAPAS 24/7
+  const vietQrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT_NO}-compact2.png?amount=${totalAmount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(BANK_ACCOUNT_NAME)}`;
+
+  const handleCopy = (text, fieldName) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const handlePayment = async (e) => {
     e.preventDefault();
@@ -149,7 +167,7 @@ const CheckoutPage = () => {
                 </label>
                 <input
                   type="tel"
-                  placeholder="0912..."
+                  placeholder="0788..."
                   className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-vtv-green outline-none"
                 />
               </div>
@@ -179,18 +197,115 @@ const CheckoutPage = () => {
                 </span>
               </label>
             </div>
-            {/* Khu vực hiển thị QR Giả lập */}
-            <div className="mt-6 bg-white p-4 rounded-xl max-w-sm mx-auto text-center">
-              <p className="text-black font-bold mb-2">Quét mã để thanh toán</p>
-              <div className="aspect-square bg-gray-200 flex items-center justify-center mb-2 rounded border-2 border-black">
-                <QrCode size={150} className="text-black" />
+            {/* Khu vực hiển thị VietQR Thật */}
+            <div className="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-5 rounded-2xl max-w-md mx-auto shadow-xl">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Mã VietQR Thanh Toán
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  Napas 24/7 Tức thì
+                </span>
               </div>
-              <p className="text-sm text-gray-600">
-                Nội dung:{' '}
-                <strong className="text-blue-600">
-                  PDTKEY {user?.id?.slice(-5).toUpperCase() || 'CODE'}
-                </strong>
-              </p>
+
+              {/* Ảnh QR thật tự động sinh từ VietQR */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-inner flex flex-col items-center justify-center mb-4">
+                <img
+                  src={vietQrUrl}
+                  alt="Mã thanh toán VietQR"
+                  className="w-full max-w-[280px] h-auto object-contain rounded-lg"
+                  loading="lazy"
+                />
+                <p className="text-[11px] text-slate-500 mt-2 flex items-center gap-1 font-medium">
+                  <ShieldCheck size={14} className="text-emerald-500" />
+                  Quét mã qua mọi App ngân hàng & Ví điện tử
+                </p>
+              </div>
+
+              {/* Thông tin chuyển khoản chi tiết & Nút Copy nhanh */}
+              <div className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5">
+                  <span className="text-slate-500 dark:text-slate-400">Ngân hàng:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{BANK_NAME}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5">
+                  <span className="text-slate-500 dark:text-slate-400">Số tài khoản:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-sm text-blue-600 dark:text-blue-400">
+                      {BANK_ACCOUNT_NO}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(BANK_ACCOUNT_NO, 'stk')}
+                      className="p-1 rounded text-slate-400 hover:text-blue-600 dark:hover:text-white transition"
+                      title="Sao chép số tài khoản"
+                    >
+                      {copiedField === 'stk' ? (
+                        <Check size={14} className="text-emerald-500" />
+                      ) : (
+                        <Copy size={14} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5">
+                  <span className="text-slate-500 dark:text-slate-400">Chủ tài khoản:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{BANK_ACCOUNT_NAME}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/5">
+                  <span className="text-slate-500 dark:text-slate-400">Số tiền:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                      {formatCurrency(totalAmount)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(String(totalAmount), 'amount')}
+                      className="p-1 rounded text-slate-400 hover:text-emerald-600 dark:hover:text-white transition"
+                      title="Sao chép số tiền"
+                    >
+                      {copiedField === 'amount' ? (
+                        <Check size={14} className="text-emerald-500" />
+                      ) : (
+                        <Copy size={14} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-500/20">
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold">Nội dung CK:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-sm text-blue-700 dark:text-blue-300">
+                      {transferContent}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(transferContent, 'content')}
+                      className="p-1 rounded text-blue-500 hover:text-blue-700 dark:hover:text-white transition"
+                      title="Sao chép nội dung chuyển khoản"
+                    >
+                      {copiedField === 'content' ? (
+                        <Check size={14} className="text-emerald-500" />
+                      ) : (
+                        <Copy size={14} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2 text-[11px] text-amber-700 dark:text-amber-300">
+                <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-500" />
+                <span>
+                  Vui lòng giữ nguyên <strong>Nội dung chuyển khoản</strong> để hệ thống tự động xác nhận đơn hàng nhanh nhất.
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -116,7 +116,7 @@ const Footer = () => {
             </h3>
             <p className="text-xs text-slate-500 mb-3">{t('supportHotline')}</p>
             <p className="text-base font-mono font-bold text-blue-600 dark:text-blue-400 mb-4">
-              0912.345.678
+              078829507
             </p>
             <div className="flex gap-2.5">
               <a

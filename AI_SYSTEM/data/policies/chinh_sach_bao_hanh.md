@@ -44,6 +44,6 @@ Tại PDTKEY, mỗi sản phẩm trao tay khách hàng đều là lời cam kế
 
 THÔNG TIN LIÊN LẠC : 
 EMAIL : support@pdtkey.com
-HOTLINE : 0912.345.678
+HOTLINE : 078829507
 ĐỊA CHỈ : Tòa nhà PDT, TP Hồ Chí Minh, Việt Nam
 

@@ -16,8 +16,8 @@ from redis.commands.search.index_definition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 
 
-REDIS_HOST = "localhost"
-REDIS_PORT = int(6379)
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
 EMBEDDING_MODEL_NAME = 'AITeamVN/Vietnamese_Embedding'
 VECTOR_DIM = 1024

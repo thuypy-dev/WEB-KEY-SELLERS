@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # 2. Redis Stack
+  # 2. Redis Stack (Hỗ trợ Semantic Cache & RedisSearch)
   key-redis:
     image: redis/redis-stack:latest
     container_name: key_redis
@@ -37,7 +37,32 @@ services:
       timeout: 5s
       retries: 5
 
-  # 3. Backend NestJS
+  # 3. Microservice Chatbot AI (FastAPI + RAG + ChromaDB)
+  key-ai:
+    build:
+      context: ./AI_SYSTEM
+      dockerfile: Dockerfile
+    container_name: key_ai
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mysql+aiomysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
+      - REDIS_HOST=key_redis
+      - REDIS_PORT=6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - RESET_CHROMA_DB=False
+      - CHROMA_DB_PATH=/app/chroma_db_data
+      - DEBUG=False
+    volumes:
+      - ai_chroma_data:/app/chroma_db_data
+    depends_on:
+      key-mysql:
+        condition: service_healthy
+      key-redis:
+        condition: service_healthy
+
+  # 4. Backend NestJS
   key-backend:
     build:
       context: .
@@ -50,13 +75,16 @@ services:
       - .env
     environment:
       - DATABASE_URL=mysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
+      - AI_SERVICE_URL=http://key_ai:8000/api/v1/ask
     depends_on:
       key-mysql:
         condition: service_healthy
       key-redis:
         condition: service_healthy
+      key-ai:
+        condition: service_started
 
-  # 4. Frontend React Vite
+  # 5. Frontend React Vite
   key-frontend:
     build:
       context: ./frontend
@@ -73,3 +101,4 @@ services:
 volumes:
   mysql_key_data_v2:
   redis_key_data:
+  ai_chroma_data:

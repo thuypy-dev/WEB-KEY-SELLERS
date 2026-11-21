@@ -134,7 +134,7 @@ export class MailService {
               © 2026 ${appName} • Nền tảng bản quyền số & phần mềm chính hãng
             </div>
             <div>
-              Hỗ trợ: <a href="mailto:${supportEmail}" style="color: #38bdf8; text-decoration: none;">${supportEmail}</a> &nbsp;|&nbsp; Hotline: <span style="color: #cbd5e1;">0912.345.678</span>
+              Hỗ trợ: <a href="mailto:${supportEmail}" style="color: #38bdf8; text-decoration: none;">${supportEmail}</a> &nbsp;|&nbsp; Hotline: <span style="color: #cbd5e1;">078829507</span>
             </div>
           </td>
         </tr>

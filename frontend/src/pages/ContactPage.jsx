@@ -35,7 +35,7 @@ const ContactPage = () => {
                   <p className="text-xs text-gray-500 font-bold uppercase mb-1">
                     Hotline
                   </p>
-                  <p className="text-white font-medium">0912.345.678</p>
+                  <p className="text-white font-medium">078829507</p>
                 </div>
               </li>
               <li className="flex items-center gap-4">
@@ -47,7 +47,7 @@ const ContactPage = () => {
                     Địa chỉ
                   </p>
                   <p className="text-white font-medium">
-                    Tòa nhà VTV, TP Hồ Chí Minh, Việt Nam
+                    Tòa nhà PDT, TP Hồ Chí Minh, Việt Nam
                   </p>
                 </div>
               </li>

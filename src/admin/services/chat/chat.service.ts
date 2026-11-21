@@ -54,7 +54,7 @@ export class ChatService {
         let botAnswer = "Xin lỗi, hiện trợ lý ảo đang bảo trì một chút";
         let recommendedProducts : any[] = [];
         try {
-            const pythonUrl = 'http://localhost:8000/api/v1/ask';
+            const pythonUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000/api/v1/ask';
             const response = await lastValueFrom(
                 this.httpService.post(
                     pythonUrl,
