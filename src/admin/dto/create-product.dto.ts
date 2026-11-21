@@ -1,4 +1,4 @@
-import { Transform, Type } from "class-transformer";
+import { Transform, Type, plainToInstance } from "class-transformer";
 import {
     IsArray,
     IsBoolean,
@@ -86,12 +86,12 @@ export class CreateProduct {
 
     @IsOptional()
     @IsBoolean()
-    @Transform(({ value }) => value === 'true' || value === true)
+    @Transform(({ value }) => (value === undefined ? undefined : value === 'true' || value === true))
     isHot?: boolean;
 
     @IsOptional()
     @IsBoolean()
-    @Transform(({ value }) => value === 'true' || value === true)
+    @Transform(({ value }) => (value === undefined ? undefined : value === 'true' || value === true))
     isActive?: boolean;
 
     @IsOptional()
@@ -124,7 +124,20 @@ export class CreateProduct {
 
     @IsOptional()
     @IsArray()
-    @Transform(parseJson)
+    @Transform(({ value }) => {
+        let parsed = value;
+        if (typeof value === 'string') {
+            try {
+                parsed = JSON.parse(value);
+            } catch {
+                return value;
+            }
+        }
+        if (Array.isArray(parsed)) {
+            return parsed.map((item) => plainToInstance(CreateProductVariant, item));
+        }
+        return parsed;
+    })
     @ValidateNested({ each: true })
     @Type(() => CreateProductVariant)
     variants?: CreateProductVariant[];

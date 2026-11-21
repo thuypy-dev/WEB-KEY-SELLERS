@@ -160,14 +160,14 @@ const ProductFormPage = () => {
       const data = new FormData();
       
       data.append('name', formData.name);
-      data.append('slug', formData.slug);
-      data.append('description', formData.description);
-      data.append('categoryId', formData.categoryId);
-      data.append('isHot', String(formData.isHot));     // Chuyển boolean -> string
-      data.append('isActive', String(formData.isActive)); 
+      if (formData.slug) data.append('slug', formData.slug);
+      data.append('description', formData.description || '');
+      data.append('categoryId', String(formData.categoryId));
+      data.append('isHot', String(formData.isHot ?? false));
+      data.append('isActive', String(formData.isActive ?? true)); 
 
       // Chuẩn hóa và chỉ gửi các trường hợp lệ của variant (id, name, price, orginalPrice)
-      const cleanVariants = formData.variants.map((v) => ({
+      const cleanVariants = (formData.variants || []).map((v) => ({
         ...(v.id ? { id: Number(v.id) } : {}),
         name: v.name,
         price: Number(v.price ?? 0),
@@ -175,8 +175,8 @@ const ProductFormPage = () => {
       }));
       data.append('variants', JSON.stringify(cleanVariants));
 
-      // Gửi keywords dưới dạng JSON string để Backend DTO (@Transform parseJson) tự động parse sạch sẽ
-      data.append('keywords', JSON.stringify(formData.keywords));
+      // Gửi keywords dưới dạng JSON string để Backend DTO tự động parse sạch sẽ
+      data.append('keywords', JSON.stringify(formData.keywords || []));
       
       // Gửi AI Meta dưới dạng JSON string
       if (formData.aiMeta) {
@@ -185,7 +185,7 @@ const ProductFormPage = () => {
       
       if (selectedFile) {
           data.append('thumbnail', selectedFile);
-      } else if (formData.thumbnail !== undefined) {
+      } else if (formData.thumbnail) {
           data.append('thumbnail', formData.thumbnail);
       }
 

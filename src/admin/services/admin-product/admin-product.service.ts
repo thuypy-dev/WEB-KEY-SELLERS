@@ -165,107 +165,153 @@ export class AdminProductService {
 
 
     async update(id: number, data: UpdateProduct) {
-        // 1. Check tồn tại (Chỉ cần chưa xóa mềm là được)
-        const product = await this.prismaSerivce.product.findUnique({
-            where: { id, isDeleted: false }
-        });
-
-        if (!product) {
-            throw new NotFoundException('Không tìm thấy sản phẩm');
-        }
-
-        // 2. Xử lý Slug (Giữ nguyên logic của bạn)
-        let newSlug: string | undefined = undefined;
-        if (data.slug && data.slug !== product.slug) {
-            newSlug = await this.checkUniqueSlug(slugify(data.slug, {
-                strict: true, trim: true, locale: 'vi', lower: true
-            }));
-        }
-        if (data.name && data.name !== product.name && !data.slug) {
-            newSlug = await this.checkUniqueSlug(slugify(data.name, {
-                strict: true, trim: true, locale: 'vi', lower: true
-            }));
-        }
-
-        // 3. Xử lý Keyword (Giữ nguyên)
-        let keywordUpdate: any;
-        if (data.keywords) {
-            keywordUpdate = {
-                set: [],
-                connectOrCreate: data.keywords.map((k) => ({
-                    where: { name: k },
-                    create: { name: k }
-                }))
-            }
-        }
-
-        // 4. Xử lý cập nhật biến thể / gói dịch vụ (variants)
-        if (data.variants && Array.isArray(data.variants) && data.variants.length > 0) {
-            const existingVariants = await this.prismaSerivce.productVariant.findMany({
-                where: { productId: id, isDeleted: false }
+        try {
+            // 1. Check tồn tại (Chỉ cần chưa xóa mềm là được)
+            const product = await this.prismaSerivce.product.findUnique({
+                where: { id, isDeleted: false }
             });
-            const incomingIds = data.variants
-                .filter(v => v.id != null)
-                .map(v => Number(v.id));
 
-            // Xóa mềm các variant cũ không còn được giữ lại
-            const toDelete = existingVariants.filter(ev => !incomingIds.includes(ev.id));
-            if (toDelete.length > 0) {
-                await this.prismaSerivce.productVariant.updateMany({
-                    where: { id: { in: toDelete.map(v => v.id) } },
-                    data: { isDeleted: true, deletedAt: new Date() }
+            if (!product) {
+                throw new NotFoundException('Không tìm thấy sản phẩm');
+            }
+
+            // 2. Xử lý Slug
+            let newSlug: string | undefined = undefined;
+            if (data.slug && data.slug !== product.slug) {
+                newSlug = await this.checkUniqueSlug(slugify(data.slug, {
+                    strict: true, trim: true, locale: 'vi', lower: true
+                }));
+            } else if (data.name && data.name !== product.name && !data.slug) {
+                newSlug = await this.checkUniqueSlug(slugify(data.name, {
+                    strict: true, trim: true, locale: 'vi', lower: true
+                }));
+            }
+
+            // 3. Xử lý Keyword an toàn
+            let parsedKeywords: any = data.keywords;
+            if (typeof parsedKeywords === 'string') {
+                try {
+                    parsedKeywords = JSON.parse(parsedKeywords);
+                } catch {
+                    parsedKeywords = [parsedKeywords];
+                }
+            }
+            let keywordUpdate: any = undefined;
+            if (parsedKeywords && Array.isArray(parsedKeywords)) {
+                const cleanKeywords = parsedKeywords
+                    .filter((k: any) => k && typeof k === 'string' && k.trim() !== '')
+                    .map((k: string) => k.trim());
+                keywordUpdate = {
+                    set: [],
+                    connectOrCreate: cleanKeywords.map((k: string) => ({
+                        where: { name: k },
+                        create: { name: k }
+                    }))
+                };
+            }
+
+            // 4. Xử lý cập nhật biến thể / gói dịch vụ (variants)
+            let parsedVariants: any = data.variants;
+            if (typeof parsedVariants === 'string') {
+                try {
+                    parsedVariants = JSON.parse(parsedVariants);
+                } catch {
+                    parsedVariants = [];
+                }
+            }
+
+            if (parsedVariants && Array.isArray(parsedVariants) && parsedVariants.length > 0) {
+                const existingVariants = await this.prismaSerivce.productVariant.findMany({
+                    where: { productId: id, isDeleted: false }
                 });
+                const incomingIds = parsedVariants
+                    .filter((v: any) => v && v.id != null)
+                    .map((v: any) => Number(v.id));
+
+                // Xóa mềm các variant cũ không còn được giữ lại
+                const toDelete = existingVariants.filter(ev => !incomingIds.includes(ev.id));
+                if (toDelete.length > 0) {
+                    await this.prismaSerivce.productVariant.updateMany({
+                        where: { id: { in: toDelete.map(v => v.id) } },
+                        data: { isDeleted: true, deletedAt: new Date() }
+                    });
+                }
+
+                // Cập nhật hoặc thêm mới từng gói
+                for (const v of parsedVariants) {
+                    if (!v || !v.name) continue;
+                    const price = Number(v.price ?? 0);
+                    const orginalPrice = Number(v.orginalPrice ?? price);
+
+                    if (v.id && existingVariants.some(ev => ev.id === Number(v.id))) {
+                        await this.prismaSerivce.productVariant.update({
+                            where: { id: Number(v.id) },
+                            data: {
+                                name: String(v.name),
+                                price: price,
+                                orginalPrice: orginalPrice
+                            }
+                        });
+                    } else {
+                        await this.prismaSerivce.productVariant.create({
+                            data: {
+                                productId: id,
+                                name: String(v.name),
+                                price: price,
+                                orginalPrice: orginalPrice
+                            }
+                        });
+                    }
+                }
             }
 
-            // Cập nhật hoặc thêm mới từng gói
-            for (const v of data.variants) {
-                if (v.id && existingVariants.some(ev => ev.id === Number(v.id))) {
-                    await this.prismaSerivce.productVariant.update({
-                        where: { id: Number(v.id) },
-                        data: {
-                            name: v.name,
-                            price: v.price,
-                            orginalPrice: v.orginalPrice ?? v.price
-                        }
-                    });
+            // 5. Chuẩn hóa kiểu dữ liệu an toàn cho Prisma
+            const isHotBool = data.isHot !== undefined 
+                ? (String(data.isHot) === 'true' || data.isHot === true) 
+                : undefined;
+            const isActiveBool = data.isActive !== undefined 
+                ? (String(data.isActive) === 'true' || data.isActive === true) 
+                : undefined;
+            const categoryId = data.categoryId ? Number(data.categoryId) : undefined;
+
+            let parsedAiMetadata: any = undefined;
+            if (data.aiMetadata !== undefined) {
+                if (typeof data.aiMetadata === 'string') {
+                    try {
+                        parsedAiMetadata = JSON.parse(data.aiMetadata);
+                    } catch {
+                        parsedAiMetadata = data.aiMetadata;
+                    }
                 } else {
-                    await this.prismaSerivce.productVariant.create({
-                        data: {
-                            productId: id,
-                            name: v.name,
-                            price: v.price,
-                            orginalPrice: v.orginalPrice ?? v.price
-                        }
-                    });
+                    parsedAiMetadata = data.aiMetadata;
                 }
             }
+
+            // 6. Update vào DB
+            return await this.prismaSerivce.product.update({
+                where: { id },
+                data: {
+                    name: data.name,
+                    slug: newSlug,
+                    description: data.description,
+                    thumbnail: data.thumbnail !== undefined && data.thumbnail !== '' ? data.thumbnail : undefined,
+                    aiMetadata: parsedAiMetadata ?? undefined,
+                    categoryId: categoryId,
+                    keyword: keywordUpdate,
+                    isHot: isHotBool,
+                    isActive: isActiveBool
+                },
+                include: {
+                    keyword: true,
+                    variants: {
+                        where: { isDeleted: false }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Lỗi AdminProductService.update:', error);
+            this.handleError(error);
         }
-
-        // 5. Update vào DB (ĐÃ BỔ SUNG isHot & isActive & variants)
-        return await this.prismaSerivce.product.update({
-            // 👇 QUAN TRỌNG: Bỏ điều kiện isActive: true để Admin sửa được cả bài đang ẩn
-            where: { id },
-            data: {
-                name: data.name,
-                slug: newSlug,
-                description: data.description,
-                thumbnail: data.thumbnail,
-                aiMetadata: data.aiMetadata ?? undefined,
-                categoryId: data.categoryId ? Number(data.categoryId) : undefined,
-                keyword: keywordUpdate,
-
-                // 👇 QUAN TRỌNG: Thêm 2 dòng này thì mới lưu được trạng thái
-                isHot: data.isHot,
-                isActive: data.isActive
-            },
-            include: {
-                keyword: true,
-                variants: {
-                    where: { isDeleted: false }
-                }
-            }
-        })
-
     }
 
     async remove(productId: number) {
@@ -331,7 +377,7 @@ export class AdminProductService {
                 throw new ConflictException('Slug hoặc tên đã tồn tại');
             }
         }
-        console.log(error);
-        throw new BadRequestException('Không thể tạo product');
+        console.error('AdminProductService Error:', error);
+        throw new BadRequestException(error?.message || 'Không thể xử lý yêu cầu sản phẩm');
     }
 }
