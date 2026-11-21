@@ -113,9 +113,10 @@ YÊU CẦU ĐỊNH DẠNG TRẢ VỀ DUY NHẤT LÀ JSON:
         ];
 
         const candidateModels = [
+          'gemini-flash-lite-latest',
+          'gemini-3-flash-preview',
+          'gemini-3.8-flash',
           'gemini-flash-latest',
-          'gemini-2.5-flash-lite',
-          'gemini-2.5-flash',
         ];
 
         let textOutput: string | null = null;
@@ -148,7 +149,7 @@ YÊU CẦU ĐỊNH DẠNG TRẢ VỀ DUY NHẤT LÀ JSON:
         }
         if (textOutput) {
           const parsed = JSON.parse(textOutput);
-          botAnswer = parsed.answer || botAnswer;
+          botAnswer = parsed.answer || parsed.response || parsed.message || botAnswer;
           bot_intent = parsed.intent || bot_intent;
           const productIds = parsed.product_ids || [];
 
@@ -195,6 +196,44 @@ YÊU CẦU ĐỊNH DẠNG TRẢ VỀ DUY NHẤT LÀ JSON:
         }
       } catch (err: any) {
         console.log('Lỗi gọi AI dự phòng:', err.message);
+      }
+    }
+
+    // DỰ PHÒNG NỘI BỘ: Nếu AI bên ngoài không phản hồi, tự động tư vấn thông minh dựa trên dữ liệu sản phẩm trong DB
+    if (botAnswer.includes('đang bận') || botAnswer.includes('Xin lỗi')) {
+      const lower = userContent.toLowerCase();
+      if (lower.includes('chào') || lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+        botAnswer = 'Dạ chào bạn! Tôi là trợ lý ảo của PDTKEY Store. Tôi có thể hỗ trợ bạn tìm kiếm key bản quyền hoặc giải đáp thắc mắc nào về sản phẩm ạ?';
+        bot_intent = 'greeting';
+      } else {
+        const words = userContent.trim().split(/\s+/).filter((w) => w.length >= 2);
+        const matches = await this.prisma.product.findMany({
+          where: {
+            isActive: true,
+            isDeleted: false,
+            OR: [
+              { name: { contains: userContent } },
+              ...words.map((w) => ({ name: { contains: w } })),
+            ],
+          },
+          take: 3,
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            thumbnail: true,
+            variants: {
+              take: 1,
+              orderBy: { price: 'asc' },
+              select: { price: true },
+            },
+          },
+        });
+        if (matches.length > 0) {
+          botAnswer = 'Dạ PDTKEY có sẵn các sản phẩm phù hợp với nhu cầu của bạn đây ạ. Mời bạn tham khảo chi tiết bên dưới nhé:';
+          recommendedProducts = matches;
+          bot_intent = 'consulting';
+        }
       }
     }
 
