@@ -45,7 +45,7 @@ services:
     container_name: key_ai
     restart: always
     ports:
-      - "8000:8000"
+      - "8008:8000"
     environment:
       - DATABASE_URL=mysql+aiomysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
       - REDIS_HOST=key_redis

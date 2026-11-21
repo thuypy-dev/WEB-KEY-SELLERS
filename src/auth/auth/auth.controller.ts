@@ -13,6 +13,7 @@ import type { RequestWithUser } from '../interfaces/request_user.interface';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { GoogleLoginDto } from '../dto/google-login.dto';
 
 
 @Controller('auth')
@@ -64,6 +65,25 @@ export class AuthController {
             accessToken,
             user
         }
+    }
+
+    @Post('google')
+    @Throttle({ default: { limit: 10, ttl: 60000 } })
+    @HttpCode(HttpStatus.OK)
+    async googleLogin(
+        @Body() dto: GoogleLoginDto,
+        @Res({ passthrough: true }) res: express.Response
+    ) {
+        const { accessToken, refreshToken, user } = await this.authService.googleLogin(dto.credential, dto.accessToken);
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+        return {
+            accessToken,
+            user
+        };
     }
 
     @Post('logout')

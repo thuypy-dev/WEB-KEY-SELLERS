@@ -7,11 +7,12 @@ import { v4 as uuidv4 } from "uuid";
 import ms from "ms";
 import { SignupDto } from '../dto/signup.dto';
 import { LoginDto } from '../dto/login.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { MailService } from '../../mail/mail.service';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -77,6 +78,68 @@ export class AuthService {
         const tokens = await this.issueTokens(user.id, user.role);
 
         // Loại bỏ password trước khi trả về
+        const { password, ...rest } = user;
+        return { ...tokens, user: rest };
+    }
+
+    // --- ĐĂNG NHẬP GOOGLE OAUTH ---
+    async googleLogin(credential?: string, googleAccessToken?: string) {
+        let email: string;
+        let fullName: string;
+
+        try {
+            if (credential) {
+                const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+                const client = new OAuth2Client(clientId);
+                const ticket = await client.verifyIdToken({
+                    idToken: credential,
+                    audience: clientId,
+                });
+                const payload = ticket.getPayload();
+                if (!payload || !payload.email) {
+                    throw new UnauthorizedException('Không thể lấy thông tin email từ Google');
+                }
+                email = payload.email.toLowerCase().trim();
+                fullName = payload.name || 'Người dùng Google';
+            } else if (googleAccessToken) {
+                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${googleAccessToken}` },
+                });
+                if (!res.ok) {
+                    throw new UnauthorizedException('Không thể xác thực token từ Google');
+                }
+                const data: any = await res.json();
+                if (!data.email) {
+                    throw new UnauthorizedException('Không tìm thấy email từ tài khoản Google');
+                }
+                email = data.email.toLowerCase().trim();
+                fullName = data.name || 'Người dùng Google';
+            } else {
+                throw new BadRequestException('Thiếu mã xác thực Google');
+            }
+        } catch (error) {
+            this.logger.error(`Google authentication error: ${error.message}`);
+            throw new UnauthorizedException('Xác thực tài khoản Google thất bại');
+        }
+
+        let user = await this.prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            const randomPassword = await argon2.hash(Math.random().toString(36).slice(-10) + '!@#Google2026');
+            user = await this.prisma.user.create({
+                data: {
+                    email,
+                    fullName,
+                    password: randomPassword,
+                    role: Role.USER,
+                },
+            });
+            this.logger.log(`Tự động tạo tài khoản mới từ Google: ${email}`);
+        }
+
+        const tokens = await this.issueTokens(user.id, user.role);
         const { password, ...rest } = user;
         return { ...tokens, user: rest };
     }

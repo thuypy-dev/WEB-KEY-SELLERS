@@ -18,6 +18,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGoogleLogin } from '@react-oauth/google';
 import useAuthStore from '../store/useAuthStore';
 import useLanguageStore from '../store/useLanguageStore';
 import axiosClient from '../store/axiosClient';
@@ -124,6 +125,35 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const loginSuccess = useAuthStore((state) => state.loginSuccess);
   const { t } = useLanguageStore();
+
+  // --- XỬ LÝ ĐĂNG NHẬP GOOGLE OAUTH ---
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await axiosClient.post('/auth/google', {
+          accessToken: tokenResponse.access_token,
+        });
+        loginSuccess(res.user, res.accessToken);
+        if (String(res.user?.role).toUpperCase() === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      } catch (err) {
+        console.error('Google Login Error:', err);
+        setError(err.response?.data?.message || 'Đăng nhập Google thất bại');
+        triggerShake();
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => {
+      setError('Đăng nhập Google thất bại hoặc bị hủy');
+      triggerShake();
+    },
+  });
 
   const [formData, setFormData] = useState({
     email: '',
@@ -496,11 +526,7 @@ const LoginPage = () => {
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() =>
-                alert(
-                  'Đăng nhập Google: Để kích hoạt luồng đăng nhập thật, bạn cần cung cấp GOOGLE_CLIENT_ID từ Google Cloud Console.',
-                )
-              }
+              onClick={() => handleGoogleLogin()}
               className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-300 dark:border-white/10 dark:bg-slate-800/50 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition shadow-sm active:scale-95"
             >
               <svg width="16" height="16" viewBox="0 0 24 24">
