@@ -24,6 +24,11 @@ const parseJson = ({ value }: any) => {
 }
 
 export class CreateProductVariant {
+    @IsOptional()
+    @IsNumber()
+    @Type(() => Number)
+    id?: number;
+
     @IsString()
     @IsNotEmpty({ message: 'Tên biến thể không được để rỗng' })
     name: string;

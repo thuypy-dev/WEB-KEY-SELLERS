@@ -166,24 +166,13 @@ const ProductFormPage = () => {
       data.append('isHot', String(formData.isHot));     // Chuyển boolean -> string
       data.append('isActive', String(formData.isActive)); 
 
-      // Gửi variants dưới dạng JSON string (Backend cần parse lại nếu dùng logic cũ, 
-      // hoặc nếu Backend bạn dùng logic DTO @Type thì cần gửi từng field. 
-      // Tuy nhiên cách an toàn nhất với FormData là gửi JSON string và parse ở Backend.
-      // Nhưng theo code Controller của bạn, nó nhận object. FormData không hỗ trợ gửi object lồng nhau tốt.
-      // MẸO: Gửi variants[0][name], variants[0][price]...
-      
-      formData.variants.forEach((v, index) => {
-          data.append(`variants[${index}][name]`, v.name);
-          data.append(`variants[${index}][price]`, v.price);
-          data.append(`variants[${index}][orginalPrice]`, v.orginalPrice);
-      });
+      // Gửi variants dưới dạng JSON string để Backend DTO (@Transform parseJson) tự động parse sạch sẽ
+      data.append('variants', JSON.stringify(formData.variants));
 
-      // Keywords và AI Meta cũng phức tạp với FormData.
-      // Cách đơn giản: Nếu Backend chưa hỗ trợ parse JSON string từ field, ta tạm bỏ qua hoặc gửi dạng simple.
-      // Ở đây ta sẽ thử gửi dạng array chuẩn của FormData
-      formData.keywords.forEach(k => data.append('keywords[]', k));
+      // Gửi keywords dưới dạng JSON string để Backend DTO (@Transform parseJson) tự động parse sạch sẽ
+      data.append('keywords', JSON.stringify(formData.keywords));
       
-      // AI Meta là object, ta stringify nó và hy vọng backend parse được hoặc sửa backend.
+      // Gửi AI Meta dưới dạng JSON string
       if (formData.aiMeta) {
         data.append('aiMetadata', JSON.stringify(formData.aiMeta));
       }

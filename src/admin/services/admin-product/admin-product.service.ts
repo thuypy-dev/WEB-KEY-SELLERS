@@ -58,7 +58,7 @@ export class AdminProductService {
                         create: data.variants.map((v) => ({
                             name: v.name,
                             price: v.price,
-                            orginalPrice: v.price
+                            orginalPrice: v.orginalPrice ?? v.price
                         }))
                     } : undefined
                 }
@@ -199,7 +199,49 @@ export class AdminProductService {
             }
         }
 
-        // 4. Update vào DB (ĐÃ BỔ SUNG isHot & isActive)
+        // 4. Xử lý cập nhật biến thể / gói dịch vụ (variants)
+        if (data.variants && Array.isArray(data.variants) && data.variants.length > 0) {
+            const existingVariants = await this.prismaSerivce.productVariant.findMany({
+                where: { productId: id, isDeleted: false }
+            });
+            const incomingIds = data.variants
+                .filter(v => v.id != null)
+                .map(v => Number(v.id));
+
+            // Xóa mềm các variant cũ không còn được giữ lại
+            const toDelete = existingVariants.filter(ev => !incomingIds.includes(ev.id));
+            if (toDelete.length > 0) {
+                await this.prismaSerivce.productVariant.updateMany({
+                    where: { id: { in: toDelete.map(v => v.id) } },
+                    data: { isDeleted: true, deletedAt: new Date() }
+                });
+            }
+
+            // Cập nhật hoặc thêm mới từng gói
+            for (const v of data.variants) {
+                if (v.id && existingVariants.some(ev => ev.id === Number(v.id))) {
+                    await this.prismaSerivce.productVariant.update({
+                        where: { id: Number(v.id) },
+                        data: {
+                            name: v.name,
+                            price: v.price,
+                            orginalPrice: v.orginalPrice ?? v.price
+                        }
+                    });
+                } else {
+                    await this.prismaSerivce.productVariant.create({
+                        data: {
+                            productId: id,
+                            name: v.name,
+                            price: v.price,
+                            orginalPrice: v.orginalPrice ?? v.price
+                        }
+                    });
+                }
+            }
+        }
+
+        // 5. Update vào DB (ĐÃ BỔ SUNG isHot & isActive & variants)
         return await this.prismaSerivce.product.update({
             // 👇 QUAN TRỌNG: Bỏ điều kiện isActive: true để Admin sửa được cả bài đang ẩn
             where: { id },
@@ -209,7 +251,7 @@ export class AdminProductService {
                 description: data.description,
                 thumbnail: data.thumbnail,
                 aiMetadata: data.aiMetadata ?? undefined,
-                categoryId: data.categoryId,
+                categoryId: data.categoryId ? Number(data.categoryId) : undefined,
                 keyword: keywordUpdate,
 
                 // 👇 QUAN TRỌNG: Thêm 2 dòng này thì mới lưu được trạng thái
@@ -217,7 +259,10 @@ export class AdminProductService {
                 isActive: data.isActive
             },
             include: {
-                keyword: true
+                keyword: true,
+                variants: {
+                    where: { isDeleted: false }
+                }
             }
         })
 
