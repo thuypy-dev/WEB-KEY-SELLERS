@@ -113,24 +113,27 @@ const StaffListPage = () => {
         }
     };
 
-    // Đổi vai trò trực tiếp xoay vòng: STAFF -> SUPPORT -> ADMIN -> STAFF
-    const handleChangeRole = async (userId, currentRole) => {
-        const nextRole = currentRole === 'STAFF' ? 'SUPPORT' : (currentRole === 'SUPPORT' ? 'ADMIN' : 'STAFF');
+    // Đổi vai trò trực tiếp từ danh sách chọn (Select Role)
+    const handleSelectRole = async (userId, newRole, currentRole) => {
+        if (!newRole || newRole === currentRole) return;
         const roleLabels = {
             STAFF: 'Nhân viên (STAFF)',
             SUPPORT: 'Supporter (SUPPORT)',
             ADMIN: 'Quản trị viên (ADMIN)',
         };
-        if (!window.confirm(`Bạn có chắc muốn chuyển vai trò tài khoản này thành ${roleLabels[nextRole]}?`)) {
+        if (!window.confirm(`Bạn có chắc muốn chuyển vai trò tài khoản này thành ${roleLabels[newRole] || newRole}?`)) {
+            // Re-fetch hoặc render lại để hoàn tác lựa chọn trên select box nếu hủy
+            fetchUsers(pagination.page);
             return;
         }
 
         try {
-            await axiosClient.patch(`/admin/users/${userId}`, { role: nextRole });
-            alert('Cập nhật vai trò thành công!');
+            await axiosClient.patch(`/admin/users/${userId}`, { role: newRole });
+            alert(`✅ Cập nhật vai trò thành công sang: ${roleLabels[newRole] || newRole}`);
             fetchUsers(pagination.page);
         } catch (error) {
             alert('Lỗi cập nhật vai trò: ' + (error.response?.data?.message || error.message));
+            fetchUsers(pagination.page);
         }
     };
 
@@ -238,21 +241,26 @@ const StaffListPage = () => {
                                         <span className="bg-slate-800 px-2 py-1 rounded text-xs text-gray-300">{user._count?.orders || 0}</span>
                                     </td>
                                     <td className="p-4 text-xs text-gray-400">{formatDate(user.createdAt)}</td>
-                                    <td className="p-4 text-right space-x-2">
-                                        <button 
-                                            onClick={() => handleChangeRole(user.id, user.role)} 
-                                            className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg text-xs font-semibold transition border border-slate-700"
-                                            title="Đổi vai trò giữa Admin và Support"
-                                        >
-                                            Đổi quyền
-                                        </button>
-                                        <button 
-                                            onClick={() => handleViewDetail(user.id)} 
-                                            className="p-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg transition"
-                                            title="Xem chi tiết"
-                                        >
-                                            <Eye size={16}/>
-                                        </button>
+                                    <td className="p-4 text-right">
+                                        <div className="inline-flex items-center gap-1.5 justify-end">
+                                            <select 
+                                                value={user.role} 
+                                                onChange={(e) => handleSelectRole(user.id, e.target.value, user.role)}
+                                                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 text-gray-200 rounded-lg text-xs font-semibold transition border border-slate-700 focus:outline-none focus:border-vtv-green cursor-pointer"
+                                                title="Chọn vai trò trực tiếp"
+                                            >
+                                                <option value="STAFF">Nhân viên (STAFF)</option>
+                                                <option value="SUPPORT">Supporter (SUPPORT)</option>
+                                                <option value="ADMIN">Quản trị viên (ADMIN)</option>
+                                            </select>
+                                            <button 
+                                                onClick={() => handleViewDetail(user.id)} 
+                                                className="p-2 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-lg transition"
+                                                title="Xem chi tiết"
+                                            >
+                                                <Eye size={16}/>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))

@@ -8,7 +8,7 @@ import { Role } from '@prisma/client';
 
 @Controller('admin/stocks')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN, Role.SUPPORT, Role.STAFF)
+@Roles(Role.ADMIN, Role.STAFF)
 export class AdminStockitemController {
     constructor(private readonly stockService : AdminStockitemService){}
     @Post()

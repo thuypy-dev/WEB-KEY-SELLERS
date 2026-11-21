@@ -112,12 +112,20 @@ const AdminSidebar = () => {
           </Link>
 
           {SIDEBAR_ITEMS.filter((item) => {
-            // Nhân viên hỗ trợ (SUPPORT) và nhân viên vận hành (STAFF) không được xem mục quản lý nhân viên và cài đặt hệ thống
             const userRole = String(user?.role || '').toUpperCase();
-            if ((userRole === 'SUPPORT' || userRole === 'STAFF') && (item.key === 'staff' || item.key === 'settings')) {
-              return false;
+            if (userRole === 'ADMIN') return true;
+
+            // SUPPORT (Chăm sóc Khách hàng): Tiếp nhận phản hồi, kiểm tra đơn hàng cho khách, trả lời đánh giá
+            if (userRole === 'SUPPORT') {
+              return ['dashboard', 'orders', 'customers', 'reviews'].includes(item.key);
             }
-            return true;
+
+            // STAFF (Nhân viên Kho & Vận hành): Quản lý kho key, xử lý đơn hàng, cập nhật sản phẩm & giá
+            if (userRole === 'STAFF') {
+              return ['dashboard', 'products', 'categories', 'orders', 'inventory', 'customers', 'reviews'].includes(item.key);
+            }
+
+            return false;
           }).map((item) => (
             <NavLink
               key={item.path}
