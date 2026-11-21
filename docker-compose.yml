@@ -73,6 +73,7 @@ services:
       - SMTP_FROM=${SMTP_FROM:-"PDTKEY Security <no-reply@pdtkey.com>"}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     depends_on:
       key-mysql:
         condition: service_healthy
