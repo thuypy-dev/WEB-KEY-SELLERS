@@ -112,25 +112,40 @@ YÊU CẦU ĐỊNH DẠNG TRẢ VỀ DUY NHẤT LÀ JSON:
           },
         ];
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-        const response = await lastValueFrom(
-          this.httpService.post(
-            geminiUrl,
-            {
-              system_instruction: {
-                parts: [{ text: systemInstruction }],
-              },
-              contents: contents,
-              generationConfig: {
-                response_mime_type: 'application/json',
-                temperature: 0.7,
-              },
-            },
-            { timeout: 15000 },
-          ),
-        );
+        const candidateModels = [
+          'gemini-flash-latest',
+          'gemini-2.5-flash-lite',
+          'gemini-2.5-flash',
+        ];
 
-        const textOutput = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        let textOutput: string | null = null;
+
+        for (const modelName of candidateModels) {
+          try {
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+            const response = await lastValueFrom(
+              this.httpService.post(
+                geminiUrl,
+                {
+                  system_instruction: {
+                    parts: [{ text: systemInstruction }],
+                  },
+                  contents: contents,
+                  generationConfig: {
+                    response_mime_type: 'application/json',
+                    temperature: 0.7,
+                  },
+                },
+                { timeout: 15000 },
+              ),
+            );
+
+            textOutput = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (textOutput) break; // Thành công, thoát vòng lặp
+          } catch (modelError: any) {
+            console.warn(`Thử model ${modelName} thất bại, chuyển sang model kế tiếp...`);
+          }
+        }
         if (textOutput) {
           const parsed = JSON.parse(textOutput);
           botAnswer = parsed.answer || botAnswer;
