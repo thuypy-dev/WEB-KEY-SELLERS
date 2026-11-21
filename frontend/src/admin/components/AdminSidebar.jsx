@@ -111,7 +111,13 @@ const AdminSidebar = () => {
             )}
           </Link>
 
-          {SIDEBAR_ITEMS.map((item) => (
+          {SIDEBAR_ITEMS.filter((item) => {
+            // Nhân viên hỗ trợ (SUPPORT) không được xem mục quản lý nhân viên và cài đặt hệ thống
+            if (String(user?.role).toUpperCase() === 'SUPPORT' && (item.key === 'staff' || item.key === 'settings')) {
+              return false;
+            }
+            return true;
+          }).map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

@@ -95,8 +95,8 @@ function App() {
 
           {/* --- NHÓM ROUTE CẦN ĐĂNG NHẬP --- */}
 
-          {/* --- NHÓM ROUTE ADMIN --- */}
-          <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
+          {/* --- NHÓM ROUTE ADMIN & STAFF (HỖ TRỢ CẢ ADMIN VÀ SUPPORT) --- */}
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPPORT']} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<DashboardPage />} />
               <Route path="products" element={<ProductListPage />} />

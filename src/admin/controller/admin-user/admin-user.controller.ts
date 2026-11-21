@@ -8,11 +8,12 @@ import { CreateStaffDto } from '../../dto/create-staff.dto';
 
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.ADMIN, Role.SUPPORT)
 export class UserController {
   constructor(private readonly userService: AdminUserService) {}
 
   @Post()
+  @Roles(Role.ADMIN)
   create(@Body() data: CreateStaffDto) {
     return this.userService.createStaff(data);
   }
@@ -37,6 +38,7 @@ export class UserController {
   }
   
   @Patch(':id')
+  @Roles(Role.ADMIN)
   update(@Param('id') id: string, @Body() data: any) {
     return this.userService.update(id, data);
   }

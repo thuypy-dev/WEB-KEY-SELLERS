@@ -7,7 +7,7 @@ import { Role } from '@prisma/client';
 
 @Controller('admin/search')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.ADMIN, Role.SUPPORT)
 export class AdminSearchController {
   constructor(private readonly searchService: AdminSearchService) {}
 

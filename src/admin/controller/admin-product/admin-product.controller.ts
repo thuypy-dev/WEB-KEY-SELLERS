@@ -15,7 +15,7 @@ import { CloudinaryService } from '../../services/cloudinary/cloudinary.service'
 
 @Controller('admin/product')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.ADMIN, Role.SUPPORT)
 export class AdminProductController {
     constructor(
         private readonly productService: AdminProductService,

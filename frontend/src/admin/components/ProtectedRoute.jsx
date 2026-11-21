@@ -4,7 +4,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore'; 
 import NotFoundPage from '../../pages/NotFoundPage'; 
 
-const ProtectedRoute = ({ requiredRole }) => {
+const ProtectedRoute = ({ requiredRole, allowedRoles }) => {
   // Dùng Hook để đảm bảo tính Reactive
   const { user, isAuthenticated } = useAuthStore();
 
@@ -13,11 +13,17 @@ const ProtectedRoute = ({ requiredRole }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // 2. Đã đăng nhập nhưng sai quyền (Ví dụ: User thường vào trang Admin)
-  // -> Hiển thị trang 404 ngay tại URL đó (Giả vờ như trang không tồn tại)
-  if (requiredRole && user.role !== requiredRole) {
-    // return <Navigate to="/404" replace />; // <-- Cách cũ: Lộ URL
-    return <NotFoundPage />; // "Tàng hình" hoàn hảo
+  // 2. Kiểm tra quyền (Hỗ trợ cả allowedRoles dạng mảng hoặc requiredRole dạng chuỗi đơn)
+  const userRole = String(user.role || '').toUpperCase();
+  const permittedRoles = allowedRoles
+    ? allowedRoles.map((r) => String(r).toUpperCase())
+    : requiredRole
+    ? [String(requiredRole).toUpperCase()]
+    : null;
+
+  // Nếu có yêu cầu quyền mà quyền người dùng không nằm trong danh sách cho phép -> 404
+  if (permittedRoles && !permittedRoles.includes(userRole)) {
+    return <NotFoundPage />; // "Tàng hình" đối với user thường
   }
 
   // 3. Đúng quyền -> Cho phép truy cập
