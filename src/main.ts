@@ -54,7 +54,6 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist : true, // Tự động bỏ các trường thừa không có trong DTO
-      forbidNonWhitelisted : true , // Báo lỗi nếu gửi trường lạ lên
       transform : true, // Tự động convert kiểu (vd: string '1' -> number 1)
     })
   );

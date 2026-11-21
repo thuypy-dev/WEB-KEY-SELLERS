@@ -166,8 +166,14 @@ const ProductFormPage = () => {
       data.append('isHot', String(formData.isHot));     // Chuyển boolean -> string
       data.append('isActive', String(formData.isActive)); 
 
-      // Gửi variants dưới dạng JSON string để Backend DTO (@Transform parseJson) tự động parse sạch sẽ
-      data.append('variants', JSON.stringify(formData.variants));
+      // Chuẩn hóa và chỉ gửi các trường hợp lệ của variant (id, name, price, orginalPrice)
+      const cleanVariants = formData.variants.map((v) => ({
+        ...(v.id ? { id: Number(v.id) } : {}),
+        name: v.name,
+        price: Number(v.price ?? 0),
+        orginalPrice: Number(v.orginalPrice ?? v.price ?? 0),
+      }));
+      data.append('variants', JSON.stringify(cleanVariants));
 
       // Gửi keywords dưới dạng JSON string để Backend DTO (@Transform parseJson) tự động parse sạch sẽ
       data.append('keywords', JSON.stringify(formData.keywords));

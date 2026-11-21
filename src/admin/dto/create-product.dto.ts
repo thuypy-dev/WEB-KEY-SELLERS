@@ -38,10 +38,32 @@ export class CreateProductVariant {
     @Type(() => Number) // Ép kiểu số
     price: number;
 
+    @IsOptional()
     @IsNumber()
     @Min(0)
     @Type(() => Number)
-    orginalPrice: number;
+    orginalPrice?: number;
+
+    @IsOptional()
+    productId?: any;
+
+    @IsOptional()
+    isDeleted?: any;
+
+    @IsOptional()
+    deletedAt?: any;
+
+    @IsOptional()
+    createdAt?: any;
+
+    @IsOptional()
+    updatedAt?: any;
+
+    @IsOptional()
+    stock?: any;
+
+    @IsOptional()
+    _count?: any;
 }
 
 export class CreateProduct {
