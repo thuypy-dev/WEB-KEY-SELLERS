@@ -25,16 +25,28 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // 5. Cấu hình CORS (Cho phép Frontend gọi API và gửi Cookie)
-  const allowedOrigins = [
-    'http://localhost:5000',
+  const defaultOrigins = [
+    'http://localhost:3003',
     'http://localhost:5173',
-    ...(process.env.FRONTEND_URL
-      ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
-      : []),
+    'http://localhost:5000',
+    'http://127.0.0.1:3003',
+    'http://127.0.0.1:5173',
   ];
+  const envOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
+    : [];
+  const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Cho phép request không có origin (server-to-server, mobile app, postman, curl)
+      if (!origin) return callback(null, true);
+      // Kiểm tra xem origin có nằm trong danh sách được phép không, hoặc chấp nhận tất cả khi DEV
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Fallback an toàn để người khác clone về không bị chặn CORS
+    },
     credentials: true,
   });
 

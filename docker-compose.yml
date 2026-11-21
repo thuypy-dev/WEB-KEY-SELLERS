@@ -45,13 +45,15 @@ services:
     container_name: key_ai
     restart: always
     ports:
-      - "8008:8000"
+      - "${AI_PORT:-8008}:8000"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - DATABASE_URL=mysql+aiomysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
       - REDIS_HOST=key_redis
       - REDIS_PORT=6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-AQ.Ab8RN6I4bH7upyPaOPZJtsZ1sE7NVFAap_FEczb0fDdX7ckOjA}
       - RESET_CHROMA_DB=False
       - CHROMA_DB_PATH=/app/chroma_db_data
       - DEBUG=False
@@ -73,10 +75,32 @@ services:
     ports:
       - "611:611"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
+      - NODE_ENV=production
+      - PORT=0611
       - DATABASE_URL=mysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
       - AI_SERVICE_URL=http://key_ai:8000/api/v1/ask
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET:-default_jwt_secret_pdtkey_access_token_123456}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:-default_jwt_secret_pdtkey_refresh_token_123456}
+      - ACCESS_TOKEN_EXPIRATION=${ACCESS_TOKEN_EXPIRATION:-15m}
+      - REFRESH_TOKEN_EXPIRATION=${REFRESH_TOKEN_EXPIRATION:-7d}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-pdtkey_default_encryption_key_32chars!}
+      - ENCRYPTION_IV_LENGTH=${ENCRYPTION_IV_LENGTH:-16}
+      - EMAIL_ADMIN=${EMAIL_ADMIN:-admin@pdtkey.com}
+      - PASSWORD_ADMIN=${PASSWORD_ADMIN:-Admin@123456}
+      - EMAIL_STAFF=${EMAIL_STAFF:-staff@pdtkey.com}
+      - PASSWORD_STAFF=${PASSWORD_STAFF:-Staff@123456}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3003,http://localhost:5173}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-"PDTKEY Security <no-reply@pdtkey.com>"}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       key-mysql:
         condition: service_healthy
@@ -91,7 +115,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://192.168.1.14:611
+        - VITE_API_URL=${VITE_API_URL:-}
     container_name: key_frontend
     restart: always
     ports:

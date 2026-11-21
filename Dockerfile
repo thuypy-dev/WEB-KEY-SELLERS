@@ -34,7 +34,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/tsconfig.json ./
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 0611
 
-CMD ["node", "dist/main"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

@@ -1,8 +1,13 @@
 import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
 
-// Cấu hình Base URL chung
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:0611';
+// Cấu hình Base URL chung:
+// - Ở Production (Docker/Nginx): Dùng relative path ('') để Nginx tự reverse-proxy đến backend, chạy được trên mọi máy/mọi IP mà không cần build lại.
+// - Ở Development: Mặc định gọi cổng NestJS dev 'http://localhost:0611'.
+const isProd = import.meta.env.PROD;
+const baseURL = import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== ''
+  ? import.meta.env.VITE_API_URL
+  : (isProd ? '' : 'http://localhost:0611');
 
 const axiosClient = axios.create({
   baseURL: baseURL,

@@ -9,8 +9,8 @@ RUN npm install
 
 COPY . .
 
-# Cho phép truyền URL của Backend khi build qua Docker ARG / ENV
-ARG VITE_API_URL=http://192.168.1.14:611
+# Cho phép truyền URL của Backend khi build qua Docker ARG / ENV (Mặc định để trống để Nginx reverse proxy đa năng)
+ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build
