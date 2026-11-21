@@ -179,6 +179,8 @@ const ProductFormPage = () => {
       
       if (selectedFile) {
           data.append('thumbnail', selectedFile);
+      } else if (formData.thumbnail !== undefined) {
+          data.append('thumbnail', formData.thumbnail);
       }
 
       // Lưu ý: Code Controller của bạn đang dùng @Body() body: any -> Nó sẽ nhận hết.
