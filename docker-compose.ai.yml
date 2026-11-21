@@ -17,7 +17,7 @@ services:
       - DATABASE_URL=mysql+aiomysql://root:RootPassword123@key_mysql:3306/vtv_key_sellers
       - REDIS_HOST=key_redis
       - REDIS_PORT=6379
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-AQ.Ab8RN6I4bH7upyPaOPZJtsZ1sE7NVFAap_FEczb0fDdX7ckOjA}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - RESET_CHROMA_DB=False
       - CHROMA_DB_PATH=/app/chroma_db_data
       - DEBUG=False
