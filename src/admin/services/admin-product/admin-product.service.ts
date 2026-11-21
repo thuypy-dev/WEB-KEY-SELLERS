@@ -151,7 +151,9 @@ export class AdminProductService {
         const product = await this.prismaSerivce.product.findUnique({
             where: { id, isDeleted: false },
             include: {
-                variants: true,
+                variants: {
+                    where: { isDeleted: false }
+                },
                 keyword: true,
                 //reviews : {take : 5, orderBy : {createdAt : 'desc'}  } //lấy luôn cmt nhưng mà chờ chắc còn xa : ) 
             }
@@ -221,21 +223,19 @@ export class AdminProductService {
             }
 
             if (parsedVariants && Array.isArray(parsedVariants) && parsedVariants.length > 0) {
-                const existingVariants = await this.prismaSerivce.productVariant.findMany({
-                    where: { productId: id, isDeleted: false }
-                });
                 const incomingIds = parsedVariants
                     .filter((v: any) => v && v.id != null)
                     .map((v: any) => Number(v.id));
 
-                // Xóa mềm các variant cũ không còn được giữ lại
-                const toDelete = existingVariants.filter(ev => !incomingIds.includes(ev.id));
-                if (toDelete.length > 0) {
-                    await this.prismaSerivce.productVariant.updateMany({
-                        where: { id: { in: toDelete.map(v => v.id) } },
-                        data: { isDeleted: true, deletedAt: new Date() }
-                    });
-                }
+                // Xóa mềm các variant cũ không còn nằm trong danh sách gửi lên
+                await this.prismaSerivce.productVariant.updateMany({
+                    where: {
+                        productId: id,
+                        isDeleted: false,
+                        ...(incomingIds.length > 0 ? { id: { notIn: incomingIds } } : {})
+                    },
+                    data: { isDeleted: true, deletedAt: new Date() }
+                });
 
                 // Cập nhật hoặc thêm mới từng gói
                 for (const v of parsedVariants) {
@@ -243,13 +243,15 @@ export class AdminProductService {
                     const price = Number(v.price ?? 0);
                     const orginalPrice = Number(v.orginalPrice ?? price);
 
-                    if (v.id && existingVariants.some(ev => ev.id === Number(v.id))) {
+                    if (v.id) {
                         await this.prismaSerivce.productVariant.update({
                             where: { id: Number(v.id) },
                             data: {
                                 name: String(v.name),
                                 price: price,
-                                orginalPrice: orginalPrice
+                                orginalPrice: orginalPrice,
+                                isDeleted: false,
+                                deletedAt: null
                             }
                         });
                     } else {

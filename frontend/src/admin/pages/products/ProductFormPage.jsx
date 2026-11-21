@@ -137,16 +137,24 @@ const ProductFormPage = () => {
   };
 
   const handleVariantChange = (index, field, value) => {
-    const newVariants = [...formData.variants];
-    newVariants[index][field] = value;
-    setFormData({ ...formData, variants: newVariants });
+    setFormData((prev) => {
+      const nextVariants = [...prev.variants];
+      nextVariants[index] = {
+        ...nextVariants[index],
+        [field]: value,
+      };
+      return { ...prev, variants: nextVariants };
+    });
   };
   
-  const addVariant = () => setFormData({ ...formData, variants: [...formData.variants, { name: '', price: 0, orginalPrice: 0 }] });
+  const addVariant = () => setFormData((prev) => ({ ...prev, variants: [...prev.variants, { name: '', price: 0, orginalPrice: 0 }] }));
   
   const removeVariant = (index) => {
     if (formData.variants.length > 1) {
-      setFormData({ ...formData, variants: formData.variants.filter((_, i) => i !== index) });
+      setFormData((prev) => ({
+        ...prev,
+        variants: prev.variants.filter((_, i) => i !== index),
+      }));
     }
   };
 
@@ -275,7 +283,14 @@ const ProductFormPage = () => {
                   <input type="text" value={variant.name} onChange={(e) => handleVariantChange(index, 'name', e.target.value)} className="flex-1 bg-transparent border-b border-slate-700 focus:border-vtv-green outline-none text-white text-sm pb-1" placeholder="Tên gói" />
                   <input type="number" value={variant.price} onChange={(e) => handleVariantChange(index, 'price', e.target.value)} className="w-24 bg-transparent border-b border-slate-700 focus:border-vtv-green outline-none text-vtv-green font-bold text-sm pb-1" placeholder="Giá bán" />
                   <input type="number" value={variant.orginalPrice} onChange={(e) => handleVariantChange(index, 'orginalPrice', e.target.value)} className="w-24 bg-transparent border-b border-slate-700 focus:border-vtv-green outline-none text-gray-400 text-sm pb-1" placeholder="Giá gốc" />
-                  <button onClick={() => removeVariant(index)} className="text-slate-600 hover:text-red-500"><Trash2 size={18} /></button>
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(index)}
+                    className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition"
+                    title="Xóa gói này"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               ))}
             </div>
