@@ -67,3 +67,4 @@ graphify-out/
 run-ai.bat
 run-ai.ps1
 
+chroma_db_data/

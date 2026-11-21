@@ -27,7 +27,7 @@ class SemanticCache :
     def __init__(self):
         self.r = None
         try : 
-            self.r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
+            self.r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False, socket_connect_timeout=2)
             self.r.ping()
             print('Kết nối Redis thành công')
         except Exception as e : 

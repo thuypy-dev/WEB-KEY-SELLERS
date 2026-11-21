@@ -6,8 +6,13 @@ from sqlalchemy.orm import declarative_base
 
 from src.config import settings
 
+# Chuẩn hóa URL sang driver async aiomysql nếu nhận URL dạng mysql://
+db_url = settings.DATABASE_URL
+if db_url.startswith("mysql://"):
+    db_url = db_url.replace("mysql://", "mysql+aiomysql://", 1)
+
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    db_url,
     # in câu lệnh sql ra terminal 
     #echo=settings.DEBUG,
     
@@ -15,7 +20,6 @@ engine = create_async_engine(
     pool_recycle=3600, # tái tạo kết nối sau mỗi một giờ
     pool_size=10, # giữ sẵn 10 kết nối
     max_overflow=20 # tối đa 20 kết nối khi quá tải
-
 )
 
 SessionLocal = async_sessionmaker(
