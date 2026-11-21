@@ -137,7 +137,7 @@ const LoginPage = () => {
         });
         loginSuccess(res.user, res.accessToken);
         const userRole = String(res.user?.role).toUpperCase();
-        if (userRole === 'ADMIN' || userRole === 'SUPPORT') {
+        if (['ADMIN', 'SUPPORT', 'STAFF'].includes(userRole)) {
           navigate('/admin');
         } else {
           navigate('/');
@@ -210,8 +210,8 @@ const LoginPage = () => {
       if (isLogin) {
         loginSuccess(data.user, data.accessToken);
         const userRole = String(data.user?.role).toUpperCase();
-        if (userRole === 'ADMIN' || userRole === 'SUPPORT') {
-          navigate('/admin'); // Admin và Nhân viên thì vào Dashboard quản trị
+        if (['ADMIN', 'SUPPORT', 'STAFF'].includes(userRole)) {
+          navigate('/admin'); // Quản trị viên và Nhân sự thì vào Dashboard quản trị
         } else {
           navigate('/');      // Khách thì ra Trang chủ
         }

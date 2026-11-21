@@ -8,7 +8,7 @@ import { CreateStaffDto } from '../../dto/create-staff.dto';
 
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN, Role.SUPPORT)
+@Roles(Role.ADMIN, Role.SUPPORT, Role.STAFF)
 export class UserController {
   constructor(private readonly userService: AdminUserService) {}
 

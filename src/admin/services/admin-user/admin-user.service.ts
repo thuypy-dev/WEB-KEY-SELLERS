@@ -91,12 +91,14 @@ export class AdminUserService {
     const rawPassword = data.password && data.password.trim() !== '' ? data.password : 'Staff@123456';
     const passwordHash = await argon2.hash(rawPassword);
 
+    const assignedRole = data.role && Object.values(Role).includes(data.role) ? data.role : Role.STAFF;
+
     const staff = await this.prisma.user.create({
       data: {
         email: data.email,
         password: passwordHash,
         fullName: data.fullName,
-        role: data.role === Role.ADMIN ? Role.ADMIN : Role.SUPPORT,
+        role: assignedRole,
       },
       select: {
         id: true,

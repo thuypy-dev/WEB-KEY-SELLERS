@@ -8,7 +8,7 @@ import { Role } from '@prisma/client';
 
 @Controller('admin/product-variants')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN, Role.SUPPORT)
+@Roles(Role.ADMIN, Role.SUPPORT, Role.STAFF)
 export class AdminProductVariantsController {
     constructor(private readonly variantService : AdminProductVariantsService){}
     @Post(':productId')

@@ -319,9 +319,9 @@ const Header = () => {
                       <p className="text-[11px] text-slate-400 uppercase font-mono font-bold">
                         {t('account')}
                       </p>
-                      {['ADMIN', 'SUPPORT'].includes(String(user?.role || '').toUpperCase()) && (
+                      {['ADMIN', 'SUPPORT', 'STAFF'].includes(String(user?.role || '').toUpperCase()) && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
-                          {String(user?.role).toUpperCase() === 'ADMIN' ? t('admin') : t('supporter')}
+                          {String(user?.role).toUpperCase() === 'ADMIN' ? t('admin') : (String(user?.role).toUpperCase() === 'STAFF' ? 'Nhân viên' : t('supporter'))}
                         </span>
                       )}
                     </div>
@@ -333,8 +333,8 @@ const Header = () => {
                     </p>
                   </div>
                   <div className="p-2 space-y-1">
-                    {/* NẾU LÀ ADMIN HOẶC SUPPORT THÌ HIỆN NÚT TỚI TRANG QUẢN TRỊ */}
-                    {Boolean(user && ['ADMIN', 'SUPPORT'].includes(String(user.role || '').toUpperCase())) && (
+                    {/* NẾU LÀ ADMIN, SUPPORT HOẶC STAFF THÌ HIỆN NÚT TỚI TRANG QUẢN TRỊ */}
+                    {Boolean(user && ['ADMIN', 'SUPPORT', 'STAFF'].includes(String(user.role || '').toUpperCase())) && (
                       <Link
                         to="/admin"
                         onClick={() => setIsUserMenuOpen(false)}

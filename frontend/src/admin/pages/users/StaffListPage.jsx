@@ -7,9 +7,10 @@ const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currenc
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString('vi-VN');
 
 const ROLES = {
-    ALL_STAFF: { value: 'ADMIN,SUPPORT', label: 'Tất cả nhân viên' },
-    ADMIN: { value: 'ADMIN', label: 'Quản trị viên' },
+    ALL_STAFF: { value: 'ADMIN,SUPPORT,STAFF', label: 'Tất cả nhân sự' },
+    STAFF: { value: 'STAFF', label: 'Nhân viên' },
     SUPPORT: { value: 'SUPPORT', label: 'Supporter' },
+    ADMIN: { value: 'ADMIN', label: 'Quản trị viên' },
 };
 
 const StaffListPage = () => {
@@ -30,7 +31,7 @@ const StaffListPage = () => {
         fullName: '',
         email: '',
         password: '',
-        role: 'SUPPORT',
+        role: 'STAFF',
     });
 
     // Fetch Data
@@ -101,7 +102,7 @@ const StaffListPage = () => {
                 fullName: '',
                 email: '',
                 password: '',
-                role: 'SUPPORT',
+                role: 'STAFF',
             });
             fetchUsers(1);
         } catch (error) {
@@ -112,11 +113,15 @@ const StaffListPage = () => {
         }
     };
 
-    // Đổi vai trò trực tiếp
+    // Đổi vai trò trực tiếp xoay vòng: STAFF -> SUPPORT -> ADMIN -> STAFF
     const handleChangeRole = async (userId, currentRole) => {
-        const nextRole = currentRole === 'ADMIN' ? 'SUPPORT' : 'ADMIN';
-        const roleLabel = nextRole === 'ADMIN' ? 'Quản trị viên (ADMIN)' : 'Supporter (SUPPORT)';
-        if (!window.confirm(`Bạn có chắc muốn chuyển vai trò tài khoản này thành ${roleLabel}?`)) {
+        const nextRole = currentRole === 'STAFF' ? 'SUPPORT' : (currentRole === 'SUPPORT' ? 'ADMIN' : 'STAFF');
+        const roleLabels = {
+            STAFF: 'Nhân viên (STAFF)',
+            SUPPORT: 'Supporter (SUPPORT)',
+            ADMIN: 'Quản trị viên (ADMIN)',
+        };
+        if (!window.confirm(`Bạn có chắc muốn chuyển vai trò tài khoản này thành ${roleLabels[nextRole]}?`)) {
             return;
         }
 
@@ -214,14 +219,19 @@ const StaffListPage = () => {
                                         </div>
                                     </td>
                                     <td className="p-4">
-                                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 ${
-                                            user.role === 'ADMIN' 
-                                                ? 'bg-rose-500/15 text-rose-500 border-rose-500/30' 
-                                                : 'bg-blue-500/15 text-blue-500 border-blue-500/30'
-                                        }`}>
-                                            <Shield size={12} />
-                                            {user.role === 'ADMIN' ? 'Quản trị viên' : 'Supporter'}
-                                        </span>
+                                        {user.role === 'ADMIN' ? (
+                                            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 bg-rose-500/15 text-rose-500 border-rose-500/30">
+                                                <Shield size={12} /> Quản trị viên
+                                            </span>
+                                        ) : user.role === 'STAFF' ? (
+                                            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                                                <Shield size={12} /> Nhân viên
+                                            </span>
+                                        ) : (
+                                            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 bg-blue-500/15 text-blue-500 border-blue-500/30">
+                                                <Shield size={12} /> Supporter
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="p-4 font-mono font-bold text-vtv-green">{formatCurrency(user.balance)}</td>
                                     <td className="p-4 text-center">
@@ -366,10 +376,27 @@ const StaffListPage = () => {
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
                                     Vai trò phân quyền
                                 </label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <label className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition ${
+                                <div className="grid grid-cols-3 gap-2.5">
+                                    <label className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border cursor-pointer transition text-xs ${
+                                        createForm.role === 'STAFF' 
+                                            ? 'bg-emerald-500/15 border-emerald-500 text-emerald-400 font-bold' 
+                                            : 'bg-slate-950 border-slate-800 text-gray-400 hover:border-slate-700'
+                                    }`}>
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="STAFF"
+                                            checked={createForm.role === 'STAFF'}
+                                            onChange={() => setCreateForm({ ...createForm, role: 'STAFF' })}
+                                            className="hidden"
+                                        />
+                                        <Shield size={14} />
+                                        <span>Nhân viên</span>
+                                    </label>
+
+                                    <label className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border cursor-pointer transition text-xs ${
                                         createForm.role === 'SUPPORT' 
-                                            ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' 
+                                            ? 'bg-blue-500/15 border-blue-500 text-blue-400 font-bold' 
                                             : 'bg-slate-950 border-slate-800 text-gray-400 hover:border-slate-700'
                                     }`}>
                                         <input
@@ -380,13 +407,13 @@ const StaffListPage = () => {
                                             onChange={() => setCreateForm({ ...createForm, role: 'SUPPORT' })}
                                             className="hidden"
                                         />
-                                        <Shield size={16} />
+                                        <Shield size={14} />
                                         <span>Supporter</span>
                                     </label>
 
-                                    <label className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition ${
+                                    <label className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border cursor-pointer transition text-xs ${
                                         createForm.role === 'ADMIN' 
-                                            ? 'bg-rose-500/10 border-rose-500 text-rose-400 font-bold' 
+                                            ? 'bg-rose-500/15 border-rose-500 text-rose-400 font-bold' 
                                             : 'bg-slate-950 border-slate-800 text-gray-400 hover:border-slate-700'
                                     }`}>
                                         <input
@@ -397,8 +424,8 @@ const StaffListPage = () => {
                                             onChange={() => setCreateForm({ ...createForm, role: 'ADMIN' })}
                                             className="hidden"
                                         />
-                                        <Shield size={16} />
-                                        <span>Quản trị viên</span>
+                                        <Shield size={14} />
+                                        <span>Quản trị</span>
                                     </label>
                                 </div>
                             </div>

@@ -17,7 +17,7 @@ async function createStaff() {
         email: configService.get<string>('EMAIL_STAFF') || 'staff@pdtkey.com',
         password: configService.get<string>('PASSWORD_STAFF') || 'Staff@123456',
         fullName: 'Nhân viên Hỗ trợ 01',
-        role: Role.SUPPORT,
+        role: Role.STAFF,
       },
       {
         email: configService.get<string>('EMAIL_SUPPORT') || 'support@pdtkey.com',

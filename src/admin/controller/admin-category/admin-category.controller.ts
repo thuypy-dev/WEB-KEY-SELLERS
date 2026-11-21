@@ -9,7 +9,7 @@ import { UpdateCategoryDto } from '../../dto/update_category.dto';
 
 @Controller('admin/categories')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN, Role.SUPPORT)
+@Roles(Role.ADMIN, Role.SUPPORT, Role.STAFF)
 export class AdminCategoryController {
     constructor(private readonly categoryService: AdminCategoryService) { }
     @Post()

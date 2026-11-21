@@ -7,7 +7,7 @@ import { Role, OrderStatus } from '@prisma/client';
 
 @Controller('admin/orders')
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles(Role.ADMIN, Role.SUPPORT)
+@Roles(Role.ADMIN, Role.SUPPORT, Role.STAFF)
 export class AdminOrdersController {
   constructor(private readonly ordersService: AdminOrdersService) {}
 

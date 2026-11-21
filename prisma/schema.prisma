@@ -38,6 +38,7 @@ enum Role {
   USER
   ADMIN
   SUPPORT
+  STAFF
 }
 
 model Category {

@@ -112,8 +112,9 @@ const AdminSidebar = () => {
           </Link>
 
           {SIDEBAR_ITEMS.filter((item) => {
-            // Nhân viên hỗ trợ (SUPPORT) không được xem mục quản lý nhân viên và cài đặt hệ thống
-            if (String(user?.role).toUpperCase() === 'SUPPORT' && (item.key === 'staff' || item.key === 'settings')) {
+            // Nhân viên hỗ trợ (SUPPORT) và nhân viên vận hành (STAFF) không được xem mục quản lý nhân viên và cài đặt hệ thống
+            const userRole = String(user?.role || '').toUpperCase();
+            if ((userRole === 'SUPPORT' || userRole === 'STAFF') && (item.key === 'staff' || item.key === 'settings')) {
               return false;
             }
             return true;
