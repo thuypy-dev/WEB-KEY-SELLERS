@@ -21,7 +21,7 @@ const CheckoutPage = () => {
   // Cấu hình thông tin thanh toán ngân hàng (ưu tiên biến môi trường VITE_ hoặc mặc định)
   const BANK_ID = import.meta.env.VITE_BANK_ID || 'MB';
   const BANK_NAME = import.meta.env.VITE_BANK_NAME || 'MB Bank (Ngân hàng Quân Đội)';
-  const BANK_ACCOUNT_NO = import.meta.env.VITE_BANK_ACCOUNT_NO || '0912345678';
+  const BANK_ACCOUNT_NO = import.meta.env.VITE_BANK_ACCOUNT_NO || '0788829507';
   const BANK_ACCOUNT_NAME = import.meta.env.VITE_BANK_ACCOUNT_NAME || 'PHAN DUC THUY';
 
   // Tính tổng tiền
