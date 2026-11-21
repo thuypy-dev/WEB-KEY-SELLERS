@@ -13,7 +13,13 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: File .env GitHub Secret
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+          
       - name: Deploy with Docker Compose
         run: |
           chmod +x deploy-nuc.sh
           ./deploy-nuc.sh
+
+          
