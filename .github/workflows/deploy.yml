@@ -14,8 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: File .env GitHub Secret
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
         run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+          printf "%s\n" "$ENV_CONTENT" > .env
           
       - name: Deploy with Docker Compose
         run: |
