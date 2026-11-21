@@ -92,7 +92,7 @@ services:
       - PASSWORD_ADMIN=${PASSWORD_ADMIN:-Admin@123456}
       - EMAIL_STAFF=${EMAIL_STAFF:-staff@pdtkey.com}
       - PASSWORD_STAFF=${PASSWORD_STAFF:-Staff@123456}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3003,http://localhost:5173}
+      - FRONTEND_URL=${FRONTEND_URL:-https://pdtkey-sellers.store,https://www.pdtkey-sellers.store,http://192.168.1.14:3003,http://localhost:3003,http://localhost:5173}
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_SECURE=${SMTP_SECURE:-false}
