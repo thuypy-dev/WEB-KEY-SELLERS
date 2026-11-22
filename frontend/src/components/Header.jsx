@@ -13,6 +13,7 @@ import {
   Moon,
   Sparkles,
   LayoutDashboard,
+  Menu,
 } from 'lucide-react';
 import useCartStore from '../store/useCartStore';
 import useAuthStore from '../store/useAuthStore';
@@ -44,6 +45,8 @@ const Header = () => {
   const inputRef = useRef(null);
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
   // --- SHORTCUT PHÍM TẮT CTRL + K ---
@@ -127,10 +130,10 @@ const Header = () => {
         {/* LOGO */}
         <Link
           to="/"
-          className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-2 group"
+          className="text-xl sm:text-2xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 group shrink-0"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-neon-blue shadow-sm group-hover:scale-105 transition-transform">
-            <Sparkles size={16} />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-neon-blue shadow-sm group-hover:scale-105 transition-transform">
+            <Sparkles size={15} />
           </div>
           <span>
             PDT<span className="text-blue-600 dark:text-blue-400">KEY</span>
@@ -256,27 +259,37 @@ const Header = () => {
         </div>
 
         {/* USER ACTIONS & THEME TOGGLE */}
-        <div className="flex items-center gap-3 text-sm font-bold">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 text-sm font-bold shrink-0">
+          {/* NÚT TÌM KIẾM TRÊN MOBILE */}
+          <button
+            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+            aria-label="Toggle Mobile Search"
+            className="md:hidden p-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            <Search size={18} />
+          </button>
+
           {/* LANGUAGE SWITCHER (VN / EN) */}
-          <LanguageSwitcher />
+          <LanguageSwitcher variant="pill" className="hidden sm:inline-flex" />
+          <LanguageSwitcher variant="button" className="sm:hidden" />
 
           {/* THEME TOGGLE BUTTON (Dark / Light) */}
           <button
             onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-amber-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10 transition-colors"
             title={theme === 'dark' ? t('themeLight') : t('themeDark')}
           >
-            {theme === 'dark' ? <Sun size={19} className="text-amber-400" /> : <Moon size={19} className="text-slate-700" />}
+            {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-700" />}
           </button>
 
           {/* GIỎ HÀNG */}
           <Link
             to="/cart"
-            className="flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition relative group px-2 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60"
+            className="flex items-center gap-1 sm:gap-2 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition relative group p-1.5 sm:px-2 sm:py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60"
           >
             <div className="relative">
-              <ShoppingCart size={20} />
+              <ShoppingCart size={19} />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full animate-bounce shadow-sm font-mono">
                   {totalItems}
@@ -291,14 +304,14 @@ const Header = () => {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className={`flex items-center gap-2.5 border-l border-slate-200 dark:border-slate-800 pl-4 transition ${
+                className={`flex items-center gap-1 sm:gap-2 border-l border-slate-200 dark:border-slate-800 pl-2 sm:pl-3 transition ${
                   isUserMenuOpen
                     ? 'text-blue-600 dark:text-blue-400'
                     : 'text-slate-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400'
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-sm">
-                  <User size={16} />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-sm">
+                  <User size={15} />
                 </div>
                 <div className="hidden sm:flex flex-col items-start leading-none">
                   <span className="text-sm font-semibold max-w-[120px] truncate">
@@ -372,16 +385,127 @@ const Header = () => {
           ) : (
             <Link
               to="/login"
-              className="flex items-center gap-2 text-slate-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition border-l border-slate-200 dark:border-slate-800 pl-4"
+              className="flex items-center gap-1.5 text-slate-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition border-l border-slate-200 dark:border-slate-800 pl-2 sm:pl-3"
             >
-              <div className="w-8 h-8 rounded-full dark:bg-slate-800 bg-slate-100 flex items-center justify-center text-slate-700 dark:text-slate-300">
-                <User size={16} />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full dark:bg-slate-800 bg-slate-100 flex items-center justify-center text-slate-700 dark:text-slate-300">
+                <User size={15} />
               </div>
               <span className="hidden sm:block">{t('login')}</span>
             </Link>
           )}
+
+          {/* HAMBURGER MENU BUTTON FOR MOBILE */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-1.5 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition ml-0.5"
+            aria-label="Open Mobile Menu"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
+
+      {/* MOBILE SEARCH BAR DROPDOWN */}
+      {isMobileSearchOpen && (
+        <div className="md:hidden p-3 bg-white dark:bg-[#111827] border-b border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-200 shadow-lg">
+          <div className="relative flex items-center">
+            <Search
+              className="absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none"
+              size={16}
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  navigate(`/search?q=${query}`);
+                  setIsMobileSearchOpen(false);
+                }
+              }}
+              placeholder={t('searchPlaceholder')}
+              autoFocus
+              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/10 text-sm rounded-xl py-2 pl-9 pr-8 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          {results.length > 0 && query.length >= 2 && (
+            <div className="mt-2 max-h-60 overflow-y-auto space-y-1 divide-y divide-slate-100 dark:divide-slate-800">
+              {results.slice(0, 5).map((prod) => (
+                <Link
+                  key={prod.id}
+                  to={`/product/${prod.slug || prod.id}`}
+                  onClick={() => setIsMobileSearchOpen(false)}
+                  className="flex items-center gap-2.5 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                >
+                  <img src={prod.thumbnail} alt="" className="w-8 h-8 rounded object-cover" />
+                  <span className="text-xs font-semibold text-slate-900 dark:text-white truncate flex-1">
+                    {prod.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MOBILE DRAWER MENU */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#0b0f19] border-b border-slate-200 dark:border-slate-800 p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {t('catalog') || 'Danh mục sản phẩm'}
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm font-semibold">
+              <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-blue-500">
+                ⚡ Tất cả sản phẩm
+              </Link>
+              <Link to="/category/hot" onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-blue-500">
+                🔥 Hot Trend
+              </Link>
+              <Link to="/category/ai" onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-blue-500">
+                🤖 Trí tuệ AI
+              </Link>
+              <Link to="/category/entertainment" onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-blue-500">
+                🎬 Phim ảnh & Giải trí
+              </Link>
+              <Link to="/category/game" onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-blue-500">
+                🎮 Game bản quyền
+              </Link>
+              <Link to="/category/software" onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 hover:text-blue-500">
+                💻 Phần mềm & Windows
+              </Link>
+            </div>
+
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Hỗ trợ & Thông tin
+              </div>
+              <div className="space-y-1 text-sm font-medium">
+                <Link to="/huong-dan-mua-hang" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-slate-600 dark:text-slate-400 hover:text-blue-500">
+                  📖 Hướng dẫn mua hàng
+                </Link>
+                <Link to="/chinh-sach-bao-hanh" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-slate-600 dark:text-slate-400 hover:text-blue-500">
+                  🛡️ Chính sách bảo hành & hoàn tiền
+                </Link>
+                <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-slate-600 dark:text-slate-400 hover:text-blue-500">
+                  ℹ️ Về chúng tôi
+                </Link>
+                <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-slate-600 dark:text-slate-400 hover:text-blue-500">
+                  📞 Liên hệ hỗ trợ
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

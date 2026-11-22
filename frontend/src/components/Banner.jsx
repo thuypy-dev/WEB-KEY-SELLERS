@@ -257,7 +257,7 @@ const Banner = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
-                  className="flex flex-col md:flex-row items-center gap-5 pt-4"
+                  className="flex flex-col md:flex-row items-center gap-4 sm:gap-5 pt-3 sm:pt-4 pb-12 md:pb-0"
                 >
                   <Link
                     to={SLIDES[current].url}
@@ -339,7 +339,7 @@ const Banner = () => {
           <ChevronRight size={24} />
         </button>
 
-        <div className="absolute z-20 bottom-6 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/20 backdrop-blur-md rounded-full border border-white/5 overflow-x-auto max-w-[90%] hide-scrollbar">
+        <div className="absolute z-20 bottom-2.5 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10 overflow-x-auto max-w-[90%] hide-scrollbar">
           {SLIDES.map((_, index) => (
             <button
               key={index}

@@ -244,33 +244,36 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-end font-sans">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-end font-sans">
       {/* Dùng flex-row-reverse để đảo vị trí: 
           Nút bấm (phần tử đầu tiên trong code) sẽ nằm bên trái.
           Khung chat (phần tử thứ hai) sẽ nằm bên phải.
       */}
-      <div className="flex flex-row-reverse items-end gap-4 relative">
+      <div className="flex flex-row-reverse items-end gap-3 sm:gap-4 relative">
         {/* Nút X to / Mở Chat */}
         <button
           onClick={() => setIsOpen((prev) => !prev)}
+          aria-label={isOpen ? 'Đóng chat' : 'Mở chat với trợ lý AI Fairy'}
           className={`
-            w-14 h-14 rounded-full shadow-2xl flex items-center justify-center 
+            w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center 
             text-black transition-all duration-300 transform hover:scale-110 active:scale-95
             border-2 border-vtv-dark flex-shrink-0 z-50
             ${isOpen ? 'bg-slate-700 text-white rotate-90' : 'bg-vtv-green hover:bg-green-400 animate-bounce-slow'}
           `}
         >
-          {isOpen ? <X size={24} /> : <MessageCircle size={28} />}
+          {isOpen ? <X size={22} className="sm:w-6 sm:h-6" /> : <MessageCircle size={24} className="sm:w-7 sm:h-7" />}
         </button>
 
         {/* Cửa sổ Chat */}
         <div
           className={`
-                ${isExpanded ? 'w-[800px] h-[85vh]' : 'w-[420px] h-[600px]'}
+                fixed inset-x-3 bottom-20 max-h-[calc(100vh-6rem)] h-[75vh] 
+                sm:static sm:inset-auto
+                ${isExpanded ? 'sm:w-[800px] sm:h-[85vh]' : 'sm:w-[420px] sm:h-[600px]'}
                 bg-vtv-card border border-slate-700 
                 rounded-2xl shadow-2xl flex flex-col overflow-hidden 
                 transition-all duration-300 ease-out origin-bottom-right
-                ${isOpen ? 'opacity-100 scale-100 translate-x-0' : 'opacity-0 scale-90 translate-x-10 pointer-events-none absolute'}
+                ${isOpen ? 'opacity-100 scale-100 translate-y-0 sm:translate-x-0' : 'opacity-0 scale-90 translate-y-4 sm:translate-x-10 pointer-events-none absolute'}
             `}
         >
           {/* Header */}

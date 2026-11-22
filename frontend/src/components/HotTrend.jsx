@@ -66,7 +66,7 @@ const ContextAwareCard = ({ product, handleAddToCart }) => {
   const discountPercent = getDiscountPercent(minVariant);
 
   return (
-    <div className="min-w-[20%] max-w-[20%] p-3 h-full relative z-0 hover:z-50 transition-all duration-300">
+    <div className="w-full min-w-full sm:min-w-[50%] sm:max-w-[50%] md:min-w-[33.333%] md:max-w-[33.333%] lg:min-w-[25%] lg:max-w-[25%] xl:min-w-[20%] xl:max-w-[20%] p-2 sm:p-3 h-full relative z-0 hover:z-50 transition-all duration-300 flex-shrink-0">
       <div
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -148,11 +148,28 @@ const ContextAwareCard = ({ product, handleAddToCart }) => {
 const HotTrend = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCooldown, setIsCooldown] = useState(false);
+  const [itemsToShow, setItemsToShow] = useState(5);
   const autoPlayRef = useRef(null);
+  const touchStartRef = useRef(null);
   const { t } = useLanguageStore();
 
   const addToCart = useCartStore((state) => state.addToCart);
   const user = useAuthStore((state) => state.user);
+
+  // Responsive số lượng card theo kích thước màn hình
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w < 640) setItemsToShow(1);
+      else if (w < 768) setItemsToShow(2);
+      else if (w < 1024) setItemsToShow(3);
+      else if (w < 1280) setItemsToShow(4);
+      else setItemsToShow(5);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const hotProducts = useMemo(() => {
     const filtered = products.filter((p) => p.isHot === true);
@@ -164,15 +181,8 @@ const HotTrend = ({ products }) => {
     return shuffled;
   }, [products]);
 
-  const itemsToShow = 5;
   const totalItems = hotProducts.length;
   const maxIndex = totalItems > itemsToShow ? totalItems - itemsToShow : 0;
-
-  const formatCurrency = (amount) =>
-    new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
 
   const startAutoPlay = useCallback(() => {
     if (autoPlayRef.current) clearInterval(autoPlayRef.current);
@@ -203,8 +213,22 @@ const HotTrend = ({ products }) => {
     else {
       setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
     }
-    setTimeout(() => setIsCooldown(false), 500);
+    setTimeout(() => setIsCooldown(false), 400);
     setTimeout(() => startAutoPlay(), 5000);
+  };
+
+  // Hỗ trợ Touch Swipe trên mobile
+  const handleTouchStart = (e) => {
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartRef.current) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStartRef.current - touchEnd;
+    if (diff > 50) handleManualNav('next');
+    else if (diff < -50) handleManualNav('prev');
+    touchStartRef.current = null;
   };
 
   useEffect(() => {
@@ -216,26 +240,28 @@ const HotTrend = ({ products }) => {
 
   if (totalItems === 0) return null;
 
+  const itemWidthPercent = 100 / itemsToShow;
+
   return (
-    <section className="relative group/section bg-slate-900/40 rounded-3xl p-6 border border-white/5 shadow-2xl mb-12 overflow-hidden">
+    <section className="relative group/section bg-slate-900/40 rounded-3xl p-4 sm:p-6 border border-white/5 shadow-2xl mb-12 overflow-hidden">
       <div className="absolute -top-24 -left-24 w-96 h-96 bg-vtv-green/10 blur-[120px] rounded-full pointer-events-none"></div>
 
-      <div className="flex items-center justify-between mb-4 relative z-10 px-2">
+      <div className="flex items-center justify-between mb-4 relative z-10 px-1 sm:px-2">
         <div>
-          <h2 className="text-3xl font-black text-white flex items-center gap-3 tracking-tighter">
+          <h2 className="text-xl sm:text-3xl font-black text-white flex items-center gap-2 sm:gap-3 tracking-tighter">
             <Zap
-              className="text-yellow-400 fill-yellow-400 animate-pulse"
-              size={32}
+              className="text-yellow-400 fill-yellow-400 animate-pulse shrink-0"
+              size={28}
             />
-            {t('hotTrendTitle')}
+            <span>{t('hotTrendTitle')}</span>
           </h2>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <p className="text-gray-500 text-xs sm:text-sm mt-1 uppercase tracking-widest font-bold">
             {t('hotTrendSubtitle')}
           </p>
         </div>
         <Link
           to="/products"
-          className="bg-slate-800 hover:bg-vtv-green hover:text-black transition-colors px-5 py-2 rounded-full font-bold text-sm text-white border border-slate-700"
+          className="bg-slate-800 hover:bg-vtv-green hover:text-black transition-colors px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-xs sm:text-sm text-white border border-slate-700 shrink-0 ml-2"
         >
           {t('viewAll')}
         </Link>
@@ -246,24 +272,30 @@ const HotTrend = ({ products }) => {
         <button
           onClick={() => handleManualNav('prev')}
           disabled={isCooldown}
-          className={`absolute -left-4 top-1/2 -translate-y-1/2 z-30 bg-black/60 backdrop-blur-md p-3 rounded-full text-white border border-white/10 transition-all shadow-xl hover:scale-110 hover:bg-vtv-green hover:text-black opacity-0 group-hover/section:opacity-100 ${isCooldown ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`absolute left-0 sm:-left-4 top-1/2 -translate-y-1/2 z-30 bg-black/80 sm:bg-black/60 backdrop-blur-md p-2 sm:p-3 rounded-full text-white border border-white/10 transition-all shadow-xl hover:scale-110 hover:bg-vtv-green hover:text-black opacity-80 sm:opacity-0 sm:group-hover/section:opacity-100 ${isCooldown ? 'opacity-40 cursor-not-allowed' : ''}`}
+          aria-label="Previous Slide"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
         </button>
         <button
           onClick={() => handleManualNav('next')}
           disabled={isCooldown}
-          className={`absolute -right-4 top-1/2 -translate-y-1/2 z-30 bg-black/60 backdrop-blur-md p-3 rounded-full text-white border border-white/10 transition-all shadow-xl hover:scale-110 hover:bg-vtv-green hover:text-black opacity-0 group-hover/section:opacity-100 ${isCooldown ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`absolute right-0 sm:-right-4 top-1/2 -translate-y-1/2 z-30 bg-black/80 sm:bg-black/60 backdrop-blur-md p-2 sm:p-3 rounded-full text-white border border-white/10 transition-all shadow-xl hover:scale-110 hover:bg-vtv-green hover:text-black opacity-80 sm:opacity-0 sm:group-hover/section:opacity-100 ${isCooldown ? 'opacity-40 cursor-not-allowed' : ''}`}
+          aria-label="Next Slide"
         >
-          <ChevronRight size={24} />
+          <ChevronRight size={20} className="sm:w-6 sm:h-6" />
         </button>
 
         {/* --- CAROUSEL CHÍNH --- */}
-        <div className="overflow-hidden py-6 -my-6 -mx-3">
+        <div
+          className="overflow-hidden py-4 -my-4 -mx-2 sm:-mx-3"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <motion.div
             className="flex"
-            animate={{ x: `calc(-${currentIndex * 20}%)` }}
-            transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
+            animate={{ x: `-${currentIndex * itemWidthPercent}%` }}
+            transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
           >
             {hotProducts.map((product) => (
               <ContextAwareCard
