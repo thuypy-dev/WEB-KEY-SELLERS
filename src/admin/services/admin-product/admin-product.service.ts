@@ -189,7 +189,7 @@ export class AdminProductService {
                 }));
             }
 
-            // 3. Xử lý Keyword an toàn
+            // 3. Xử lý Keyword an toàn (Loại bỏ trùng lặp)
             let parsedKeywords: any = data.keywords;
             if (typeof parsedKeywords === 'string') {
                 try {
@@ -200,9 +200,9 @@ export class AdminProductService {
             }
             let keywordUpdate: any = undefined;
             if (parsedKeywords && Array.isArray(parsedKeywords)) {
-                const cleanKeywords = parsedKeywords
+                const cleanKeywords = Array.from(new Set(parsedKeywords
                     .filter((k: any) => k && typeof k === 'string' && k.trim() !== '')
-                    .map((k: string) => k.trim());
+                    .map((k: string) => k.trim())));
                 keywordUpdate = {
                     set: [],
                     connectOrCreate: cleanKeywords.map((k: string) => ({
@@ -224,7 +224,7 @@ export class AdminProductService {
 
             if (parsedVariants && Array.isArray(parsedVariants) && parsedVariants.length > 0) {
                 const incomingIds = parsedVariants
-                    .filter((v: any) => v && v.id != null)
+                    .filter((v: any) => v && v.id != null && !isNaN(Number(v.id)))
                     .map((v: any) => Number(v.id));
 
                 // Xóa mềm các variant cũ không còn nằm trong danh sách gửi lên
@@ -243,17 +243,31 @@ export class AdminProductService {
                     const price = Number(v.price ?? 0);
                     const orginalPrice = Number(v.orginalPrice ?? price);
 
-                    if (v.id) {
-                        await this.prismaSerivce.productVariant.update({
-                            where: { id: Number(v.id) },
-                            data: {
-                                name: String(v.name),
-                                price: price,
-                                orginalPrice: orginalPrice,
-                                isDeleted: false,
-                                deletedAt: null
-                            }
+                    if (v.id && !isNaN(Number(v.id))) {
+                        const existingVariant = await this.prismaSerivce.productVariant.findFirst({
+                            where: { id: Number(v.id), productId: id }
                         });
+                        if (existingVariant) {
+                            await this.prismaSerivce.productVariant.update({
+                                where: { id: existingVariant.id },
+                                data: {
+                                    name: String(v.name),
+                                    price: price,
+                                    orginalPrice: orginalPrice,
+                                    isDeleted: false,
+                                    deletedAt: null
+                                }
+                            });
+                        } else {
+                            await this.prismaSerivce.productVariant.create({
+                                data: {
+                                    productId: id,
+                                    name: String(v.name),
+                                    price: price,
+                                    orginalPrice: orginalPrice
+                                }
+                            });
+                        }
                     } else {
                         await this.prismaSerivce.productVariant.create({
                             data: {

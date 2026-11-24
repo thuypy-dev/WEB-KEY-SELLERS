@@ -202,14 +202,10 @@ const ProductFormPage = () => {
       // Thôi cứ gửi FormData chuẩn xem sao.
 
       if (isEditMode) {
-        await axiosClient.patch(`/admin/product/${id}`, data, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await axiosClient.patch(`/admin/product/${id}`, data);
         alert('Cập nhật thành công!');
       } else {
-        await axiosClient.post('/admin/product', data, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await axiosClient.post('/admin/product', data);
         alert('Thêm mới thành công!');
       }
       navigate('/admin/products');

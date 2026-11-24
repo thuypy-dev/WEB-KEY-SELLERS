@@ -92,8 +92,9 @@ const CheckoutPage = () => {
       // alert(`Thanh toán thành công! Mã đơn: ${response.code}`); // Có thể hiện mã đơn nếu muốn
 
       clearCart();
-      // Chuyển sang trang Success, truyền mã đơn hàng để hiển thị
-      navigate(`/success?orderCode=${response.code}`);
+      const cleanCode = (response.code || '').replace(/^#/, '').trim();
+      // Chuyển sang trang Success, truyền mã đơn hàng đã mã hoá và tổng tiền
+      navigate(`/success?orderCode=${encodeURIComponent(cleanCode)}&total=${totalAmount}`);
     } catch (error) {
       console.error('Lỗi thanh toán:', error);
 

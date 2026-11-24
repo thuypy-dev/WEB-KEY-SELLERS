@@ -5,21 +5,39 @@ import { motion } from 'framer-motion';
 
 const SuccessPage = () => {
   const [searchParams] = useSearchParams();
-  const orderCode = searchParams.get('orderCode') || 'ORD-UNKNOWN';
 
-  // Giả lập thông tin ngân hàng (Bạn thay thông tin thật vào đây)
+  // Đọc mã đơn hàng an toàn (xử lý cả trường hợp hash URL hoặc mã có dấu #)
+  let rawCode = searchParams.get('orderCode');
+  if (!rawCode && typeof window !== 'undefined' && window.location.hash) {
+    // Trường hợp URL bị dính hash /success?orderCode=#ORD-xxx hoặc /success#ORD-xxx
+    rawCode = window.location.hash.replace(/^#/, '');
+    if (rawCode.includes('=')) {
+      rawCode = rawCode.split('=')[1];
+    }
+  }
+  const cleanOrderCode = decodeURIComponent(rawCode || '').replace(/^#/, '').trim();
+  const orderCode = cleanOrderCode || 'ORD-UNKNOWN';
+
+  // Lấy tổng tiền truyền sang nếu có
+  const totalParam = searchParams.get('total');
+  const amountNumber = totalParam ? Number(totalParam) : null;
+
+  // Cấu hình thông tin ngân hàng (ưu tiên biến môi trường VITE_ hoặc mặc định thật)
+  const BANK_ID = import.meta.env.VITE_BANK_ID || 'MB';
   const BANK_INFO = {
-    bankName: 'MB Bank (Quân Đội)',
-    accountNum: '0368888888', // Số tk của bạn
-    accountName: 'NGUYEN VAN A',
-    amount: 'Theo đơn hàng',
-    content: `PDTKEY ${orderCode.replace('#', '')}`,
+    bankName: import.meta.env.VITE_BANK_NAME || 'MB Bank (Quân Đội)',
+    accountNum: import.meta.env.VITE_BANK_ACCOUNT_NO || '0788829507',
+    accountName: import.meta.env.VITE_BANK_ACCOUNT_NAME || 'PHAN DUC THUY',
+    amount: amountNumber
+      ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amountNumber)
+      : 'Theo đơn hàng',
+    content: `PDTKEY ${orderCode}`,
   };
 
-  // Tạo link QR VietQR xịn sò (Tự động điền nội dung)
-  // Format: https://img.vietqr.io/image/<BANK>-<ACC>-<TEMPLATE>.png?amount=<AMOUNT>&addInfo=<CONTENT>
-  // Ở đây mình để template compact, bạn có thể chỉnh amount nếu truyền được giá tiền sang đây
-  const qrUrl = `https://img.vietqr.io/image/MB-${BANK_INFO.accountNum}-compact.png?addInfo=${BANK_INFO.content}`;
+  // Tạo link QR VietQR chuẩn NAPAS 24/7 (Tự động điền tiền, nội dung & tên chủ tài khoản)
+  const qrUrl = amountNumber
+    ? `https://img.vietqr.io/image/${BANK_ID}-${BANK_INFO.accountNum}-compact2.png?amount=${amountNumber}&addInfo=${encodeURIComponent(BANK_INFO.content)}&accountName=${encodeURIComponent(BANK_INFO.accountName)}`
+    : `https://img.vietqr.io/image/${BANK_ID}-${BANK_INFO.accountNum}-compact2.png?addInfo=${encodeURIComponent(BANK_INFO.content)}&accountName=${encodeURIComponent(BANK_INFO.accountName)}`;
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -104,10 +122,33 @@ const SuccessPage = () => {
 
           {/* Chi tiết tài khoản */}
           <div className="space-y-4 text-sm">
-            <div>
-              <span className="text-gray-500 block text-xs">Ngân hàng</span>
-              <span className="text-white font-bold">{BANK_INFO.bankName}</span>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-gray-500 block text-xs">Ngân hàng</span>
+                <span className="text-white font-bold">{BANK_INFO.bankName}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 block text-xs">Chủ tài khoản</span>
+                <span className="text-white font-bold">{BANK_INFO.accountName}</span>
+              </div>
             </div>
+
+            {amountNumber && (
+              <div className="flex justify-between items-center bg-slate-800 p-2 rounded-lg border border-slate-700">
+                <div>
+                  <span className="text-gray-500 block text-xs">Số tiền cần chuyển</span>
+                  <span className="text-vtv-green font-mono font-bold text-lg">{BANK_INFO.amount}</span>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(String(amountNumber))}
+                  className="text-vtv-green hover:bg-slate-700 p-1.5 rounded transition"
+                  title="Sao chép số tiền"
+                >
+                  <Copy size={16} />
+                </button>
+              </div>
+            )}
+
             <div className="flex justify-between items-center bg-slate-800 p-2 rounded-lg border border-slate-700">
               <div>
                 <span className="text-gray-500 block text-xs">
@@ -120,6 +161,7 @@ const SuccessPage = () => {
               <button
                 onClick={() => copyToClipboard(BANK_INFO.accountNum)}
                 className="text-vtv-green hover:bg-slate-700 p-1.5 rounded transition"
+                title="Sao chép STK"
               >
                 <Copy size={16} />
               </button>
